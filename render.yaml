@@ -10,6 +10,10 @@ services:
       python manage.py migrate
 
     envVars:
+      
+      - key: PYTHON_VERSION
+        value: 3.10.12
+
       - key: SECRET_KEY
         sync: false
       - key: DEBUG
