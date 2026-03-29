@@ -16,7 +16,7 @@ django-cloudinary-storage==0.3.0
 cloudinary==1.40.0
 
 # Image processing for thumbnails
-Pillow==10.2.0
+# Pillow==10.3.0
 
 # Gunicorn for production server (DigitalOcean, Render)
 gunicorn==21.2.0
