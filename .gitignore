@@ -1,0 +1,81 @@
+# =====================================
+# Python
+# =====================================
+__pycache__/
+*.py[cod]
+*.pyo
+*$py.class
+.Python
+
+
+# Virtual environment
+env/
+venv/
+ENV/
+.venv/
+
+# Distribution / packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+*.egg-info/
+.installed.cfg
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+*.py,cover
+.cache
+.pytest_cache/
+
+# =====================================
+# Django
+# =====================================
+*.log
+*.pot
+*.pyc
+staticfiles/
+media/
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Django migrations (OPTIONAL, usually keep them)
+# Uncomment only if you don't want migrations in git
+# */migrations/*
+
+# Media uploads
+media/
+staticfiles/
+static/
+# (static/ only if you use collectstatic locally)
+
+# enviourement variable
+.env
+.env.*
+!.env.example
+
+# react node
+etdtech-frontend/node_modules/
+etdtech-frontend/.env
+etdtech-frontend/build/
+etdtech-frontend/dist/
+
+
+# os files
+.DS_Store
+Thumbs.db
+
+.vscode/
+.idea/
+*swp
