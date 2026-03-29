@@ -1,31 +1,19 @@
 Django==5.0.3
 djangorestframework==3.14.0
 
-# CORS for frontend-backend communication
 django-cors-headers==4.3.1
 
-# MySQL connectors (you can use either mysqlclient OR PyMySQL)
 PyMySQL==1.1.0
 
-
-# JWT Authentication
 djangorestframework-simplejwt==5.3.1
 
-# Cloudinary media storage
 django-cloudinary-storage==0.3.0
 cloudinary==1.40.0
 
-# Image processing for thumbnails
-# Pillow==10.3.0
+Pillow==10.2.0
 
-# Gunicorn for production server (DigitalOcean, Render)
 gunicorn==21.2.0
-
-# Whitenoise for static files (optional if using NGINX for static)
 whitenoise==6.6.0
 
-# Environment variable loader
 python-dotenv==1.0.1
-Pillow==10.2.0
 python-decouple==3.8
-
