@@ -149,7 +149,7 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-import cloudinary
+
 
 CLOUDINARY_STORAGE={
     'CLOUD_NAME': os.environ.get("CLOUDINARY_CLOUD_NAME"),
@@ -158,3 +158,6 @@ CLOUDINARY_STORAGE={
 }
 
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+
+
