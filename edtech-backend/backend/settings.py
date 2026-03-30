@@ -133,7 +133,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
-MEDIA_URL = '/media/'
+
 
 
 
@@ -159,5 +159,5 @@ CLOUDINARY_STORAGE={
 
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
-
+MEDIA_URL = '/media/'
 
