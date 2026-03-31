@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import API from "../services/api";
+import SyllabusModal from "../components/SyllabusModal"; // ← add
 export default function CourseDetails() {
  const { id } = useParams();
  const [course, setCourse] = useState(null);
+ const [showModal, setShowModal] = useState(false); // ← add
  useEffect(() => {
    API.get(`/courses/${id}/`)
      .then((res) => setCourse(res.data))
@@ -18,6 +20,13 @@ export default function CourseDetails() {
  );
  return (
 <div className="max-w-4xl mx-auto px-4 md:px-6 py-6 md:py-10">
+     {/* Syllabus Modal */}
+     {showModal && (
+<SyllabusModal
+         course={course}
+         onClose={() => setShowModal(false)}
+       />
+     )}
 <img
        src={course.thumbnail}
        alt={course.title}
@@ -29,16 +38,24 @@ export default function CourseDetails() {
 <p className="text-gray-700 dark:text-gray-300 text-sm md:text-base mb-6">
        {course.description}
 </p>
+     {/* Two buttons side by side */}
+<div className="flex flex-col sm:flex-row gap-4 mb-8">
 <button
-       onClick={enroll}
-       className="w-full md:w-auto bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 font-semibold"
+         onClick={enroll}
+         className="w-full sm:w-auto bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 font-semibold"
 >
-       Enroll Now
+         Enroll Now
 </button>
+<button
+         onClick={() => setShowModal(true)}
+         className="w-full sm:w-auto bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-semibold"
+>
+         Download Syllabus 📄
+</button>
+</div>
 <h2 className="text-xl md:text-2xl font-semibold mt-8 md:mt-10 mb-3 dark:text-white">
        Lessons
 </h2>
-     {/* ← safe check in case lessons is empty */}
      {course.lessons && course.lessons.length > 0 ? (
 <ul className="list-disc ml-5 md:ml-6 text-gray-800 dark:text-gray-300">
          {course.lessons.map((lesson) => (
