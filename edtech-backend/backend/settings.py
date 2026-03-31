@@ -2,6 +2,8 @@ import os
 import pymysql
 from pathlib import Path
 from datetime import timedelta
+from dotenv import load_dotenv
+load_dotenv()  # Load environment variables from .env file
 pymysql.install_as_MySQLdb()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -31,6 +33,7 @@ INSTALLED_APPS = [
    # Cloudinary (IMPORTANT)
    'cloudinary',
    'cloudinary_storage',
+   'leads'
 ]
 
 # ─── Middleware ───────────────────────────────────────────
