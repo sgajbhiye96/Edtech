@@ -10,7 +10,7 @@ export default function Navbar() {
        {/* Logo */}
 <Link to="/" className="flex items-center gap-2">
 <img
-           src="/logo.jpg"
+           src="/logo.png"
            alt="InnovationAILabs"
            className="h-10 w-auto object-contain"
          />
