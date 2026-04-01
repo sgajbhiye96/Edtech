@@ -32,41 +32,39 @@ const SOCIAL = [
 
 export function Footer() {
   return (
-    <footer className="bg-[#050B16] text-gray-200 pt-16 border-t border-white/10">
+    <footer className="bg-[#050B16] text-gray-200 border-t border-white/10">
 
-      {/* ✅ TOP CTA BANNER */}
-      <div className="bg-gradient-to-r from-blue-500 via-purple-600 to-blue-700 px-6 py-10 rounded-t-3xl shadow-xl">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between text-center md:text-left gap-6">
-          
+      {/* ✅ Top CTA Section */}
+      <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 py-10 px-6 shadow-lg rounded-t-2xl">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
           <div>
-            <h2 className="text-3xl font-extrabold text-white">
+            <h2 className="text-white text-3xl font-extrabold">
               Ready to Transform Your Career? 🚀
             </h2>
-            <p className="text-blue-100 text-sm mt-2">
+            <p className="text-blue-50 text-sm mt-2">
               Join 2,500+ students already building their future with InnovationAILabs.
             </p>
           </div>
 
           <Link
             to="/courses"
-            className="px-8 py-3 bg-white text-blue-700 font-bold rounded-xl hover:bg-gray-100 transition shadow-lg"
+            className="px-8 py-3 bg-white text-blue-700 font-bold rounded-xl hover:bg-gray-200 transition shadow-lg"
           >
             Explore Courses →
           </Link>
-
         </div>
       </div>
 
-      {/* ✅ MAIN GRID */}
-      <div className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-14">
+      {/* ✅ Main Footer Grid */}
+      <div className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-12">
 
-        {/* ✅ Brand */}
+        {/* ✅ Brand Section */}
         <div>
-          <img src="/logo.png" alt="InnovationAILabs" className="h-12 mb-5 opacity-90" />
+          <img src="/logo.png" alt="InnovationAILabs" className="h-10 w-auto mb-4" />
 
-          <p className="text-gray-300 leading-relaxed text-sm">
-            India’s most trusted platform for AI, Data Science & Full‑Stack Development.
-            Learn through real‑world projects, live internships & job‑oriented programs.
+          <p className="text-gray-200 text-sm leading-relaxed">
+            India's most trusted EdTech platform for AI, Data Science & Full-Stack Development.
+            Real-world projects + live internships + job-oriented programs.
           </p>
 
           {/* ✅ Social Icons */}
@@ -77,7 +75,7 @@ export function Footer() {
                 href={s.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-200 hover:bg-blue-600 hover:border-blue-600 transition-all font-bold"
+                className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/80 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition"
               >
                 {s.icon}
               </a>
@@ -85,18 +83,19 @@ export function Footer() {
           </div>
         </div>
 
-        {/* ✅ Courses */}
+        {/* ✅ Our Programs */}
         <div>
-          <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-5">Our Programs</h3>
-
+          <h3 className="text-white font-bold text-sm uppercase tracking-widest mb-5">
+            Our Programs
+          </h3>
           <ul className="space-y-3">
             {COURSES.map((c) => (
               <li key={c.name}>
                 <Link
                   to={c.path}
-                  className="group flex items-center gap-2 text-gray-300 hover:text-cyan-400 transition"
+                  className="flex items-center gap-2 text-gray-200 hover:text-cyan-400 transition group"
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 group-hover:bg-cyan-400" />
+                  <span className="w-2 h-2 rounded-full bg-cyan-400 group-hover:bg-cyan-300" />
                   {c.name}
                 </Link>
               </li>
@@ -104,18 +103,19 @@ export function Footer() {
           </ul>
         </div>
 
-        {/* ✅ Company Links */}
+        {/* ✅ Company */}
         <div>
-          <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-5">Company</h3>
-
+          <h3 className="text-white font-bold text-sm uppercase tracking-widest mb-5">
+            Company
+          </h3>
           <ul className="space-y-3">
             {COMPANY.map((c) => (
               <li key={c.name}>
                 <Link
                   to={c.path}
-                  className="group flex items-center gap-2 text-gray-300 hover:text-cyan-400 transition"
+                  className="flex items-center gap-2 text-gray-200 hover:text-cyan-400 transition group"
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 group-hover:bg-cyan-400" />
+                  <span className="w-2 h-2 rounded-full bg-cyan-400 group-hover:bg-cyan-300" />
                   {c.name}
                 </Link>
               </li>
@@ -123,22 +123,23 @@ export function Footer() {
           </ul>
         </div>
 
-        {/* ✅ Contact */}
+        {/* ✅ Contact Us */}
         <div>
-          <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-5">Contact Us</h3>
-
+          <h3 className="text-white font-bold text-sm uppercase tracking-widest mb-5">
+            Contact Us
+          </h3>
           <ul className="space-y-4">
             {CONTACT.map((c) => (
               <li key={c.text} className="flex items-start gap-3">
                 <span className="text-lg">{c.icon}</span>
-                <span className="text-gray-300 text-sm">{c.text}</span>
+                <span className="text-gray-200 text-sm">{c.text}</span>
               </li>
             ))}
           </ul>
 
-          {/* Newsletter */}
+          {/* ✅ Newsletter */}
           <div className="mt-6">
-            <p className="text-white text-xs uppercase tracking-widest mb-2">
+            <p className="text-white text-xs uppercase font-bold tracking-widest mb-3">
               Get Free Career Tips
             </p>
 
@@ -146,32 +147,30 @@ export function Footer() {
               <input
                 type="email"
                 placeholder="Your email"
-                className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-400 focus:border-blue-500"
+                className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:border-cyan-400 outline-none"
               />
-              <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-bold">
+              <button className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg transition text-white font-bold">
                 →
               </button>
             </div>
           </div>
         </div>
-
       </div>
 
-      {/* ✅ Bottom */}
-      <div className="border-t border-white/10 py-6">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between text-center gap-3">
-          <p className="text-gray-400 text-xs">
+      {/* ✅ Bottom Section */}
+      <div className="border-t border-white/10 py-6 px-6">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between text-center gap-3">
+          <p className="text-gray-300 text-xs">
             © {new Date().getFullYear()} InnovationAILabs. All rights reserved.
           </p>
 
-          <div className="flex gap-4 text-xs text-gray-400">
-            <a href="#" className="hover:text-gray-200 transition">Privacy Policy</a>
-            <a href="#" className="hover:text-gray-200 transition">Terms of Service</a>
-            <a href="#" className="hover:text-gray-200 transition">Refund Policy</a>
+          <div className="flex gap-4 text-xs text-gray-300">
+            <a href="#" className="hover:text-white transition">Privacy Policy</a>
+            <a href="#" className="hover:text-white transition">Terms of Service</a>
+            <a href="#" className="hover:text-white transition">Refund Policy</a>
           </div>
         </div>
       </div>
-
     </footer>
   );
 }
