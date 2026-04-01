@@ -1,4 +1,5 @@
 from django.db import models
+from cloudinary_storage.storage import RawMediaCloudinaryStorage
 class Course(models.Model):
    title = models.CharField(max_length=255)
    description = models.TextField()
