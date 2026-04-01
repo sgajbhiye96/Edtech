@@ -10,18 +10,23 @@ class LeadCreateView(generics.CreateAPIView):
    permission_classes = [AllowAny]
    def perform_create(self, serializer):
        lead = serializer.save()
-       # Send email to admin
-       send_mail(
-           subject=f"New Lead: {lead.name} - {lead.course_interested}",
-           message=f"""
+       # Only send email if admin email is configured
+       admin_email = getattr(settings, 'ADMIN_EMAIL', None)
+       if admin_email:
+           try:
+               send_mail(
+                   subject=f"New Lead: {lead.name} - {lead.course_interested}",
+                   message=f"""
 New lead received!
 Name: {lead.name}
 Email: {lead.email}
 Mobile: {lead.mobile}
 City: {lead.city}
 Course Interested: {lead.course_interested}
-           """,
-           from_email=settings.DEFAULT_FROM_EMAIL,
-           recipient_list=[settings.ADMIN_EMAIL],
-           fail_silently=True,
-       )
+                   """,
+                   from_email=settings.DEFAULT_FROM_EMAIL,
+                   recipient_list=[admin_email],
+                   fail_silently=True,
+               )
+           except Exception:
+               pass  # Never crash because of email failure
