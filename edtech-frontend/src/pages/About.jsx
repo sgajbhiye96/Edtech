@@ -1,14 +1,14 @@
 import { Link } from "react-router-dom";
 const team = [
 {
-name: "Snehal Gajbhiye",
+name: "Siddharth Gajbhiye",
 role: "Founder & Lead Instructor",
 bio: "Full-stack developer and educator with 8+ years of industry experience. Passionate about making tech education accessible.",
 avatar: "SG",
 color: "#6366f1",
 },
 {
-name: "AI Curriculum Team",
+name: "Experienced Curriculum Team",
 role: "Course Designers",
 bio: "Industry professionals from top tech companies who design and continuously update our hands-on project curriculum.",
 avatar: "AC",
@@ -368,8 +368,8 @@ marginBottom: "36px",
 }}>
 
 {[
-{ icon: " ", label: "Email Us", value: "info@innovationailabs.in" },
-{ icon: " ", label: "WhatsApp", value: "+91 98765 43210" },
+{ icon: " ", label: "Email Us", value: "care@innovationailabs.in" },
+{ icon: " ", label: "WhatsApp", value: "+91 8482821174" },
 { icon: " ", label: "Website", value: "innovationailabs.in" },
 ].map((c) => (
 <div key={c.label} style={{

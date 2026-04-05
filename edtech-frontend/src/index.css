@@ -3,9 +3,37 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── GLOBAL RESET (fixes white space at top) ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
 
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
 
-/* ANIMATIONS */
+#root {
+  margin: 0;
+  padding: 0;
+}
+
+/* ── FONTS ── */
+body {
+  font-family: 'DM Sans', sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Syne', sans-serif;
+}
+
+/* ── SMOOTH SCROLL ── */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ── ANIMATIONS ── */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(20px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -33,9 +61,7 @@
   animation: scaleUp 0.7s ease-out forwards;
 }
 
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
+/* ── SCROLLBAR HIDE ── */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -43,12 +69,3 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-
-
-
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.animate-fadeIn { animation: fadeIn 1s ease-out forwards; }
