@@ -35,6 +35,7 @@ import Lessons from "./admin/Lessons";
 import Users from "./admin/Users";
 
 import Enrollments from "./admin/Enrollments";
+import './index.css';
 
 export default function App() {
 
