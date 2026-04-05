@@ -67,7 +67,7 @@ return (
 <section
 style={{
 background: "linear-gradient(135deg, #0f0c29 0%, #1a1a4e 50%, #0f0c29 100%)",
-minHeight: "92vh",
+minHeight: "100vh",
 display: "flex",
 alignItems: "center",
 justifyContent: "center",
