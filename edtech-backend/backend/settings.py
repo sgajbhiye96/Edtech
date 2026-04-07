@@ -7,12 +7,22 @@ load_dotenv()  # Load environment variables from .env file
 pymysql.install_as_MySQLdb()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+from django.core.management.utils import get_random_secret_key
+
+SECRET_KEY = get_random_secret_key()
+
+
 # ─── Security ─────────────────────────────────────────────
-SECRET_KEY = os.environ.get("SECRET_KEY")
+# SECRET_KEY = os.environ.get("SECRET_KEY")
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 ALLOWED_HOSTS = os.environ.get(
    "ALLOWED_HOSTS", "localhost,127.0.0.1"
 ).split(",")
+
+# Cashfree credentials (load from environment)
+CASHFREE_APP_ID    = os.environ.get("CASHFREE_APP_ID", "")
+CASHFREE_SECRET_KEY = os.environ.get("CASHFREE_SECRET_KEY", "")
+CASHFREE_ENV       = os.environ.get("CASHFREE_ENV", "sandbox")  # sandbox | production
 
 # ─── Applications ─────────────────────────────────────────
 INSTALLED_APPS = [
@@ -33,7 +43,8 @@ INSTALLED_APPS = [
    # Cloudinary (IMPORTANT)
    'cloudinary',
    'cloudinary_storage',
-   'leads'
+   'leads',
+   'payments',
 ]
 
 # ─── Middleware ───────────────────────────────────────────
@@ -76,8 +87,8 @@ DATABASES = {
        "NAME": os.environ.get("DB_NAME"),
        "USER": os.environ.get("DB_USER"),
        "PASSWORD": os.environ.get("DB_PASSWORD"),
-       "HOST": os.environ.get("DB_HOST"),
-       "PORT": os.environ.get("DB_PORT"),
+       "HOST": os.environ.get("DB_HOST","localhost"),
+       "PORT": os.environ.get("DB_PORT","3306"),
        "OPTIONS": {
            "ssl": {"ssl": {}} if os.environ.get("DB_SSL") == "True" else {},
            "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
