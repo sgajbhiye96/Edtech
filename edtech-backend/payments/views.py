@@ -150,36 +150,31 @@ class CreateOrderView(APIView):
             # Reserve a seat atomically before contacting Razorpay.
             batch = Batch.objects.select_for_update().get(pk=batch.pk)
 
-            existing = Enrollment.objects.filter(
+            enrollment = Enrollment.objects.filter(
                 user=request.user,
                 batch=batch,
-                status="ACTIVE",
-            ).exists()
-            if existing:
+            ).first()
+
+            if enrollment and enrollment.status == "ACTIVE":
                 return Response(
                     {"error": "You are already enrolled in this batch."},
                     status=status.HTTP_409_CONFLICT,
                 )
 
-            enrollment, enrollment_created = Enrollment.objects.get_or_create(
-                user=request.user,
-                batch=batch,
-                defaults={"status": "PENDING_PAYMENT"},
-            )
+            if enrollment is None:
+                reserved_count = batch.enrollments.filter(
+                    status__in=("ACTIVE", "PENDING_PAYMENT")
+                ).count()
+                if reserved_count >= batch.max_students:
+                    return Response(
+                        {"error": "This batch is full."},
+                        status=status.HTTP_409_CONFLICT,
+                    )
 
-            if enrollment.status == "ACTIVE":
-                return Response(
-                    {"error": "You are already enrolled in this batch."},
-                    status=status.HTTP_409_CONFLICT,
-                )
-
-            reserved_count = batch.enrollments.filter(
-                status__in=("ACTIVE", "PENDING_PAYMENT")
-            ).count()
-            if reserved_count > batch.max_students:
-                return Response(
-                    {"error": "This batch is full."},
-                    status=status.HTTP_409_CONFLICT,
+                Enrollment.objects.create(
+                    user=request.user,
+                    batch=batch,
+                    status="PENDING_PAYMENT",
                 )
 
 
