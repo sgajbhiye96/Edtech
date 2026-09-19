@@ -23,6 +23,9 @@ export default function Batches() {
   const [assignment, setAssignment] = useState(forms.assignment);
   const [project, setProject] = useState(forms.project);
   const [students, setStudents] = useState([]);
+  const [content, setContent] = useState({ live: [], resource: [], assignment: [], project: [] });
+  const [editing, setEditing] = useState(null);
+  const [draft, setDraft] = useState(null);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
 
@@ -56,7 +59,7 @@ export default function Batches() {
     }
   };
 
-  const saveBatch = async (event) => {
+  const loadContent = async (id) => {\n    const [live, resource, assignment, project] = await Promise.all([\n      API.get("/courses/live-classes/admin/?batch=" + id),\n      API.get("/courses/resources/admin/?batch=" + id),\n      API.get("/courses/assignments/admin/?batch=" + id),\n      API.get("/courses/projects/admin/?batch=" + id),\n    ]);\n    setContent({ live: live.data, resource: resource.data, assignment: assignment.data, project: project.data });\n  };\n\n  const saveContent = async (kind, value) => {\n    const endpoint = { live: "live-classes", resource: "resources", assignment: "assignments", project: "projects" }[kind];\n    try {\n      const payload = { ...value, batch: Number(selected) };\n      if (editing?.id) await API.patch("/courses/" + endpoint + "/admin/" + editing.id + "/", payload);\n      else await API.post("/courses/" + endpoint + "/admin/create/", payload);\n      setNotice(editing?.id ? "Content updated." : "Content added.");\n      setEditing(null); setDraft(null);\n      await loadContent(selected);\n    } catch (err) { setError(JSON.stringify(err?.response?.data || "Could not save content.")); }\n  };\n\n  const deleteContent = async (kind, id) => {\n    if (!window.confirm("Delete this item?")) return;\n    const endpoint = { live: "live-classes", resource: "resources", assignment: "assignments", project: "projects" }[kind];\n    try { await API.delete("/courses/" + endpoint + "/admin/" + id + "/"); setNotice("Content deleted."); await loadContent(selected); }\n    catch (err) { setError(JSON.stringify(err?.response?.data || "Could not delete content.")); }\n  };\n\n  const startAdd = (kind) => { setEditing({ kind, id: null }); setDraft({ ...forms[kind] }); };\n  const startEdit = (kind, item) => { setEditing({ kind, id: item.id }); setDraft({ ...item, scheduled_at: item.scheduled_at ? item.scheduled_at.slice(0, 16) : "", due_at: item.due_at ? item.due_at.slice(0, 16) : "" }); };\n\n  const saveBatch = async (event) => {
     event.preventDefault();
     setNotice(""); setError("");
     const payload = {
@@ -150,7 +153,7 @@ export default function Batches() {
   );
 }
 
-function Content({ title, fields, setFields, fieldsConfig, extra, onSubmit }) {
+function ContentForm({ kind, value, setValue, onCancel, onSubmit }) {\n  const fieldsConfig = {\n    live: [["title","Title","text",true],["description","Description","text",false],["scheduled_at","Scheduled at","datetime-local",true],["duration_minutes","Duration","number",true],["meeting_url","Meeting URL","url",false],["recording_url","Recording URL","url",false]],\n    resource: [["title","Title","text",true],["description","Description","text",false],["url","URL","url",false]],\n    assignment: [["title","Title","text",true],["description","Description","text",false],["due_at","Due at","datetime-local",false],["submission_url","Submission URL","url",false]],\n    project: [["title","Title","text",true],["description","Description","text",false],["repository_url","Repository URL","url",false]],\n  }[kind];\n  return <form onSubmit={onSubmit} className="grid md:grid-cols-2 gap-4">{fieldsConfig.map(([key,label,type,required]) => <input key={key} required={required} type={type} placeholder={label} value={value?.[key] || ""} onChange={e => setValue({ ...value, [key]: e.target.value })} className="border rounded p-3" />)}\n    {kind === "live" && <label className="flex gap-2 p-3"><input type="checkbox" checked={Boolean(value.recording_available)} onChange={e => setValue({ ...value, recording_available: e.target.checked })} /> Recording available</label>}\n    {kind === "resource" && <select value={value.resource_type || "LINK"} onChange={e => setValue({ ...value, resource_type: e.target.value })} className="border rounded p-3"><option>LINK</option><option>FILE</option><option>NOTE</option></select>}\n    <div className="md:col-span-2 flex gap-3"><button className="bg-[#12172B] text-white rounded p-3 font-semibold">Save</button><button type="button" onClick={onCancel} className="border rounded p-3">Cancel</button></div></form>;\n}\n\nfunction Content({ title, fields, setFields, fieldsConfig, extra, onSubmit }) {
   return (
     <section className="bg-white p-6 rounded-xl shadow">
       <h2 className="text-lg font-semibold mb-4">{title}</h2>
