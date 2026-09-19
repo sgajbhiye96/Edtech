@@ -146,31 +146,42 @@ class CreateOrderView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        existing = Enrollment.objects.filter(
-            user=request.user,
-            batch=batch,
-            status="ACTIVE",
-        ).exists()
-        if existing:
-            return Response(
-                {"error": "You are already enrolled in this batch."},
-                status=status.HTTP_409_CONFLICT,
+        with transaction.atomic():
+            # Reserve a seat atomically before contacting Razorpay.
+            batch = Batch.objects.select_for_update().get(pk=batch.pk)
+
+            existing = Enrollment.objects.filter(
+                user=request.user,
+                batch=batch,
+                status="ACTIVE",
+            ).exists()
+            if existing:
+                return Response(
+                    {"error": "You are already enrolled in this batch."},
+                    status=status.HTTP_409_CONFLICT,
+                )
+
+            enrollment, enrollment_created = Enrollment.objects.get_or_create(
+                user=request.user,
+                batch=batch,
+                defaults={"status": "PENDING_PAYMENT"},
             )
 
-        reserved_count = batch.enrollments.filter(
-            status__in=("ACTIVE", "PENDING_PAYMENT")
-        ).count()
-        if reserved_count >= batch.max_students:
-            return Response(
-                {"error": "This batch is full."},
-                status=status.HTTP_409_CONFLICT,
-            )
+            if enrollment.status == "ACTIVE":
+                return Response(
+                    {"error": "You are already enrolled in this batch."},
+                    status=status.HTTP_409_CONFLICT,
+                )
 
-        Enrollment.objects.get_or_create(
-            user=request.user,
-            batch=batch,
-            defaults={"status": "PENDING_PAYMENT"},
-        )
+            reserved_count = batch.enrollments.filter(
+                status__in=("ACTIVE", "PENDING_PAYMENT")
+            ).count()
+            if reserved_count > batch.max_students:
+                return Response(
+                    {"error": "This batch is full."},
+                    status=status.HTTP_409_CONFLICT,
+                )
+
 
         amount = Decimal(batch.price)
         amount_paise = int(amount * 100)
