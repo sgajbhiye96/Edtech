@@ -146,6 +146,7 @@ class CreateOrderView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        reservation_created = False
         with transaction.atomic():
             # Reserve a seat atomically before contacting Razorpay.
             batch = Batch.objects.select_for_update().get(pk=batch.pk)
@@ -176,6 +177,7 @@ class CreateOrderView(APIView):
                     batch=batch,
                     status="PENDING_PAYMENT",
                 )
+                reservation_created = True
 
 
         amount = Decimal(batch.price)
@@ -201,6 +203,10 @@ class CreateOrderView(APIView):
             data = response.json()
 
             if response.status_code >= 400:
+                if reservation_created:
+                    Enrollment.objects.filter(
+                        user=request.user, batch=batch, status="PENDING_PAYMENT"
+                    ).delete()
                 return Response(
                     {"error": data.get("error", {}).get(
                         "description", "Failed to create Razorpay order."
@@ -227,6 +233,10 @@ class CreateOrderView(APIView):
                 "batch_name": batch.name,
             })
         except requests.RequestException:
+            if reservation_created:
+                Enrollment.objects.filter(
+                    user=request.user, batch=batch, status="PENDING_PAYMENT"
+                ).delete()
             return Response(
                 {"error": "Payment gateway is temporarily unavailable."},
                 status=status.HTTP_502_BAD_GATEWAY,
