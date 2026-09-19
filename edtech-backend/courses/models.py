@@ -7,12 +7,7 @@ class Course(models.Model):
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
     thumbnail = models.ImageField(upload_to="thumbnails/", blank=True, null=True)
-    syllabus = models.FileField(
-        upload_to="syllabus/",
-        blank=True,
-        null=True,
-        storage=RawMediaCloudinaryStorage(),
-    )
+    syllabus = models.FileField(upload_to="syllabus/", blank=True, null=True, storage=RawMediaCloudinaryStorage())
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -22,13 +17,7 @@ class Course(models.Model):
 
 
 class Batch(models.Model):
-    STATUS_CHOICES = [
-        ("UPCOMING", "Upcoming"),
-        ("ONGOING", "Ongoing"),
-        ("COMPLETED", "Completed"),
-        ("CANCELLED", "Cancelled"),
-    ]
-
+    STATUS_CHOICES = [("UPCOMING", "Upcoming"), ("ONGOING", "Ongoing"), ("COMPLETED", "Completed"), ("CANCELLED", "Cancelled")]
     course = models.ForeignKey(Course, related_name="batches", on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     start_date = models.DateField()
@@ -68,12 +57,7 @@ class LiveClass(models.Model):
 
 
 class LearningResource(models.Model):
-    RESOURCE_TYPES = [
-        ("LINK", "Link"),
-        ("FILE", "File"),
-        ("NOTE", "Note"),
-    ]
-
+    RESOURCE_TYPES = [("LINK", "Link"), ("FILE", "File"), ("NOTE", "Note")]
     batch = models.ForeignKey(Batch, related_name="resources", on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
