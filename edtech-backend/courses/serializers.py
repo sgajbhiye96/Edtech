@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Course, Lesson, Batch, LiveClass
+from .models import Course, Lesson, Batch, LiveClass, LearningResource, Assignment, Project
 
 
 class LessonSerializer(serializers.ModelSerializer):
@@ -14,8 +14,25 @@ class LiveClassSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class LearningResourceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LearningResource
+        fields = "__all__"
+
+
+class AssignmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Assignment
+        fields = "__all__"
+
+
+class ProjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Project
+        fields = "__all__"
+
+
 class BatchSerializer(serializers.ModelSerializer):
-    live_classes = LiveClassSerializer(many=True, read_only=True)
     enrolled_count = serializers.SerializerMethodField()
 
     class Meta:
