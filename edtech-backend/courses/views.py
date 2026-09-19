@@ -2,6 +2,10 @@ from rest_framework import generics, permissions
 from rest_framework.parsers import MultiPartParser, FormParser
 
 from enrollments.models import Enrollment
+from django.contrib.auth import get_user_model
+from rest_framework.response import Response
+
+User = get_user_model()
 from .models import Course, Batch, LiveClass, LearningResource, Assignment, Project
 from .serializers import CourseSerializer, BatchSerializer, LiveClassSerializer, LearningResourceSerializer, AssignmentSerializer, ProjectSerializer
 
@@ -118,6 +122,24 @@ class AdminBatchListView(generics.ListAPIView):
     queryset = Batch.objects.select_related("course").all()
     serializer_class = BatchSerializer
     permission_classes = [permissions.IsAdminUser]
+
+
+class AdminBatchStudentsView(generics.ListAPIView):
+    permission_classes = [permissions.IsAdminUser]
+
+    def get(self, request, pk):
+        batch = Batch.objects.get(pk=pk)
+        enrollments = Enrollment.objects.select_related("user").filter(batch=batch)
+        return Response([
+            {
+                "id": enrollment.id,
+                "username": enrollment.user.username,
+                "email": enrollment.user.email,
+                "status": enrollment.status,
+                "enrolled_at": enrollment.enrolled_at,
+            }
+            for enrollment in enrollments
+        ])
 
 
 class AdminBatchDetailView(generics.RetrieveUpdateDestroyAPIView):
