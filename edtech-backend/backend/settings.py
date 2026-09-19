@@ -19,10 +19,10 @@ ALLOWED_HOSTS = os.environ.get(
    "ALLOWED_HOSTS", "localhost,127.0.0.1"
 ).split(",")
 
-# Cashfree credentials (load from environment)
-CASHFREE_APP_ID    = os.environ.get("CASHFREE_APP_ID", "")
-CASHFREE_SECRET_KEY = os.environ.get("CASHFREE_SECRET_KEY", "")
-CASHFREE_ENV       = os.environ.get("CASHFREE_ENV", "sandbox")  # sandbox | production
+# Razorpay credentials (load from environment; never commit secrets)
+RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "")
+RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET", "")
+RAZORPAY_WEBHOOK_SECRET = os.environ.get("RAZORPAY_WEBHOOK_SECRET", "")
 
 # ─── Applications ─────────────────────────────────────────
 INSTALLED_APPS = [
