@@ -1,6 +1,14 @@
 from django.contrib import admin
 
-from .models import Course, Lesson, Batch, LiveClass
+from .models import (
+    Course,
+    Lesson,
+    Batch,
+    LiveClass,
+    LearningResource,
+    Assignment,
+    Project,
+)
 
 
 @admin.register(Course)
@@ -36,6 +44,25 @@ class LiveClassAdmin(admin.ModelAdmin):
         "recording_available",
     )
     list_filter = ("recording_available",)
+    search_fields = ("title", "batch__name")
+
+
+@admin.register(LearningResource)
+class LearningResourceAdmin(admin.ModelAdmin):
+    list_display = ("title", "batch", "resource_type", "created_at")
+    list_filter = ("resource_type",)
+    search_fields = ("title", "batch__name")
+
+
+@admin.register(Assignment)
+class AssignmentAdmin(admin.ModelAdmin):
+    list_display = ("title", "batch", "due_at", "created_at")
+    search_fields = ("title", "batch__name")
+
+
+@admin.register(Project)
+class ProjectAdmin(admin.ModelAdmin):
+    list_display = ("title", "batch", "created_at")
     search_fields = ("title", "batch__name")
 
 
