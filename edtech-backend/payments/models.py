@@ -1,8 +1,10 @@
+from django.conf import settings
 from django.db import models
-from django.conf import settings   # ✅ Use custom user model
+
+from courses.models import Batch
+
 
 class Payment(models.Model):
-
     STATUS_CHOICES = [
         ("PENDING", "Pending"),
         ("SUCCESS", "Success"),
@@ -10,22 +12,36 @@ class Payment(models.Model):
         ("CANCELLED", "Cancelled"),
     ]
 
-    # ✅ FIX — use AUTH_USER_MODEL, NOT django.contrib.auth.User
+    PROVIDER_CHOICES = [
+        ("RAZORPAY", "Razorpay"),
+    ]
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="payments"
+        related_name="payments",
     )
-
-    course_id   = models.IntegerField()
-    order_id    = models.CharField(max_length=100, unique=True)
-    cf_order_id = models.CharField(max_length=100, blank=True)
-    payment_id  = models.CharField(max_length=100, blank=True)
-    amount      = models.DecimalField(max_digits=10, decimal_places=2)
-    currency    = models.CharField(max_length=10, default="INR")
-    status      = models.CharField(max_length=20, choices=STATUS_CHOICES, default="PENDING")
-    created_at  = models.DateTimeField(auto_now_add=True)
-    updated_at  = models.DateTimeField(auto_now=True)
+    batch = models.ForeignKey(
+        Batch,
+        on_delete=models.PROTECT,
+        related_name="payments",
+    )
+    provider = models.CharField(
+        max_length=20,
+        choices=PROVIDER_CHOICES,
+        default="RAZORPAY",
+    )
+    order_id = models.CharField(max_length=100, unique=True)
+    payment_id = models.CharField(max_length=100, blank=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(max_length=10, default="INR")
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="PENDING",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ["-created_at"]
