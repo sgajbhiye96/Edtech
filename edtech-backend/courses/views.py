@@ -113,3 +113,38 @@ class ProjectCreateView(generics.CreateAPIView):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
     permission_classes = [permissions.IsAdminUser]
+
+class AdminBatchListView(generics.ListAPIView):
+    queryset = Batch.objects.select_related("course").all()
+    serializer_class = BatchSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
+class AdminBatchDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Batch.objects.all()
+    serializer_class = BatchSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
+class AdminLiveClassDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = LiveClass.objects.all()
+    serializer_class = LiveClassSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
+class AdminLearningResourceDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = LearningResource.objects.all()
+    serializer_class = LearningResourceSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
+class AdminAssignmentDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Assignment.objects.all()
+    serializer_class = AssignmentSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
+class AdminProjectDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Project.objects.all()
+    serializer_class = ProjectSerializer
+    permission_classes = [permissions.IsAdminUser]
