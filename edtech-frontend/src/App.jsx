@@ -17,6 +17,7 @@ import AddCourse from "./admin/AddCourse";
 import Lessons from "./admin/Lessons";
 import Users from "./admin/Users";
 import Enrollments from "./admin/Enrollments";
+import Batches from "./admin/Batches";
 import "./index.css";
 
 export default function App() {
@@ -38,6 +39,7 @@ export default function App() {
             <Route path="courses" element={<AdminCourses />} />
             <Route path="courses/add" element={<AddCourse />} />
             <Route path="courses/:id/lessons" element={<Lessons />} />
+            <Route path="batches" element={<Batches />} />
             <Route path="users" element={<Users />} />
             <Route path="enrollments" element={<Enrollments />} />
           </Route>
