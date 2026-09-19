@@ -2,10 +2,8 @@ from rest_framework import generics, permissions
 from rest_framework.parsers import MultiPartParser, FormParser
 
 from enrollments.models import Enrollment
-from django.contrib.auth import get_user_model
 from rest_framework.response import Response
 
-User = get_user_model()
 from .models import Course, Batch, LiveClass, LearningResource, Assignment, Project
 from .serializers import CourseSerializer, BatchSerializer, LiveClassSerializer, LearningResourceSerializer, AssignmentSerializer, ProjectSerializer
 
