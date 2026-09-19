@@ -146,10 +146,26 @@ class AdminBatchDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAdminUser]
 
 
+class AdminLiveClassListView(generics.ListAPIView):
+    permission_classes = [permissions.IsAdminUser]
+    serializer_class = LiveClassSerializer
+
+    def get_queryset(self):
+        return LiveClass.objects.select_related("batch").filter(batch_id=self.request.query_params.get("batch"))
+
+
 class AdminLiveClassDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = LiveClass.objects.all()
     serializer_class = LiveClassSerializer
     permission_classes = [permissions.IsAdminUser]
+
+
+class AdminLearningResourceListView(generics.ListAPIView):
+    permission_classes = [permissions.IsAdminUser]
+    serializer_class = LearningResourceSerializer
+
+    def get_queryset(self):
+        return LearningResource.objects.filter(batch_id=self.request.query_params.get("batch"))
 
 
 class AdminLearningResourceDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -158,10 +174,26 @@ class AdminLearningResourceDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAdminUser]
 
 
+class AdminAssignmentListView(generics.ListAPIView):
+    permission_classes = [permissions.IsAdminUser]
+    serializer_class = AssignmentSerializer
+
+    def get_queryset(self):
+        return Assignment.objects.filter(batch_id=self.request.query_params.get("batch"))
+
+
 class AdminAssignmentDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Assignment.objects.all()
     serializer_class = AssignmentSerializer
     permission_classes = [permissions.IsAdminUser]
+
+
+class AdminProjectListView(generics.ListAPIView):
+    permission_classes = [permissions.IsAdminUser]
+    serializer_class = ProjectSerializer
+
+    def get_queryset(self):
+        return Project.objects.filter(batch_id=self.request.query_params.get("batch"))
 
 
 class AdminProjectDetailView(generics.RetrieveUpdateDestroyAPIView):
