@@ -2,7 +2,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap');
 /* ── GLOBAL RESET (fixes white space at top) ── */
 *, *::before, *::after {
   box-sizing: border-box;

@@ -1,270 +1,149 @@
 import { Link, useLocation } from "react-router-dom";
 import { useContext, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
+
 export default function Navbar() {
-const { user, logout } = useContext(AuthContext);
-const [menuOpen, setMenuOpen] = useState(false);
-const location = useLocation();
-const navLinks = [
-{ to: "/", label: "Home" },
-{ to: "/courses", label: "Courses" },
-{ to: "/about", label: "About Us" },
-];
-const isActive = (path) =>
-path === "/"
-? location.pathname === "/"
-: location.pathname.startsWith(path);
-return (
-<nav
-style={{
-background: "linear-gradient(135deg, #0f0c29 0%, #1a1a4e 50%, #0f0c29 100%)",
-borderBottom: "1px solid rgba(99,102,241,0.2)",
-position: "sticky",
-top: 0,
-zIndex: 50,
-fontFamily: "'DM Sans', sans-serif",
-}}
->
-<div
-style={{
-maxWidth: "1280px",
-margin: "0 auto",
-padding: "0 1.5rem",
-display: "flex",
-justifyContent: "space-between",
-alignItems: "center",
-height: "68px",
-}}
->
-{/* Logo */}
-<Link to="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}>
+  const { user, logout } = useContext(AuthContext);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const location = useLocation();
 
-<img src="/logo.jpg" alt="InnovationAILabs" style={{ height: "42px", width: "auto", borderRadius: "8px" }} />
-<span
-style={{
-fontFamily: "'Syne', sans-serif",
-fontWeight: 800,
-fontSize: "1.1rem",
-background: "linear-gradient(90deg, #a78bfa, #60a5fa)",
-WebkitBackgroundClip: "text",
-WebkitTextFillColor: "transparent",
-letterSpacing: "-0.02em",
-}}
->
-InnovationAILabs
-</span>
-</Link>
-{/* Desktop Nav */}
-<div style={{ display: "flex", alignItems: "center", gap: "8px" }} className="desktop-nav">
-{navLinks.map((link) => (
-<Link
-key={link.to}
-to={link.to}
-style={{
-color: isActive(link.to) ? "#a78bfa" : "rgba(255,255,255,0.75)",
-textDecoration: "none",
-padding: "6px 14px",
-borderRadius: "8px",
-fontSize: "0.92rem",
-fontWeight: isActive(link.to) ? 600 : 400,
-background: isActive(link.to) ? "rgba(167,139,250,0.1)" : "transparent",
-borderBottom: isActive(link.to) ? "2px solid #a78bfa" : "2px solid transparent",
-transition: "all 0.2s",
-}}
->
-{link.label}
-</Link>
-))}
-{user ? (
-<div style={{ display: "flex", alignItems: "center", gap: "8px", marginLeft: "8px" }}>
-<Link
-to="/dashboard"
-style={{
-color: isActive("/dashboard") ? "#a78bfa" : "rgba(255,255,255,0.75)",
-textDecoration: "none",
-padding: "6px 14px",
-borderRadius: "8px",
+  const navLinks = [
+    { to: "/", label: "Home" },
+    { to: "/courses", label: "Courses" },
+    { to: "/about", label: "About Us" },
+  ];
 
-fontSize: "0.92rem",
-background: isActive("/dashboard") ? "rgba(167,139,250,0.1)" : "transparent",
-borderBottom: isActive("/dashboard") ? "2px solid #a78bfa" : "2px solid transparent",
-}}
->
-Dashboard
-</Link>
-<button
-onClick={logout}
-style={{
-background: "rgba(239,68,68,0.15)",
-border: "1px solid rgba(239,68,68,0.4)",
-color: "#f87171",
-padding: "7px 18px",
-borderRadius: "8px",
-cursor: "pointer",
-fontSize: "0.9rem",
-fontWeight: 500,
-transition: "all 0.2s",
-}}
-onMouseOver={(e) => (e.target.style.background = "rgba(239,68,68,0.3)")}
-onMouseOut={(e) => (e.target.style.background = "rgba(239,68,68,0.15)")}
->
-Logout
-</button>
-</div>
-) : (
-<div style={{ display: "flex", alignItems: "center", gap: "10px", marginLeft: "8px" }}>
-<Link
-to="/login"
-style={{
-color: "rgba(255,255,255,0.85)",
-textDecoration: "none",
-padding: "7px 18px",
-borderRadius: "8px",
-fontSize: "0.9rem",
-border: "1px solid rgba(255,255,255,0.2)",
-transition: "all 0.2s",
-}}
->
-Login
-</Link>
-<Link
-to="/register"
-style={{
-background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-color: "#fff",
+  const isActive = (path) =>
+    path === "/"
+      ? location.pathname === "/"
+      : location.pathname.startsWith(path);
 
-textDecoration: "none",
-padding: "7px 18px",
-borderRadius: "8px",
-fontSize: "0.9rem",
-fontWeight: 600,
-boxShadow: "0 4px 15px rgba(99,102,241,0.4)",
-transition: "all 0.2s",
-}}
->
-Get Started
-</Link>
-</div>
-)}
-</div>
-{/* Hamburger */}
-<button
-onClick={() => setMenuOpen(!menuOpen)}
-style={{
-display: "none",
-background: "none",
-border: "none",
-color: "white",
-fontSize: "1.5rem",
-cursor: "pointer",
-padding: "4px",
-}}
-className="hamburger-btn"
->
-{menuOpen ? "✕" : "☰"}
-</button>
-</div>
-{/* Mobile Menu */}
-{menuOpen && (
-<div
-style={{
-background: "rgba(15,12,41,0.98)",
-borderTop: "1px solid rgba(99,102,241,0.2)",
-padding: "1rem 1.5rem 1.5rem",
-display: "flex",
-flexDirection: "column",
-gap: "4px",
-}}
->
-{navLinks.map((link) => (
-<Link
+  const linkClass = (path) =>
+    `px-3.5 py-1.5 rounded-[3px] text-[0.92rem] transition-colors ${
+      isActive(path)
+        ? "text-[#12172B] font-semibold bg-[#F2A93B]/15 border-b-2 border-[#F2A93B]"
+        : "text-[#2B3252] hover:text-[#12172B] border-b-2 border-transparent"
+    }`;
 
-key={link.to}
-to={link.to}
-onClick={() => setMenuOpen(false)}
-style={{
-color: isActive(link.to) ? "#a78bfa" : "rgba(255,255,255,0.8)",
-textDecoration: "none",
-padding: "10px 14px",
-borderRadius: "8px",
-fontSize: "1rem",
-fontWeight: isActive(link.to) ? 600 : 400,
-background: isActive(link.to) ? "rgba(167,139,250,0.1)" : "transparent",
-}}
->
-{link.label}
-</Link>
-))}
-{user ? (
-<>
-<Link
-to="/dashboard"
-onClick={() => setMenuOpen(false)}
-style={{ color: "rgba(255,255,255,0.8)", textDecoration: "none", padding: "10px 14px", borderRadius: "8px" }}
->
-Dashboard
-</Link>
-<button
-onClick={() => { logout(); setMenuOpen(false); }}
-style={{
-background: "rgba(239,68,68,0.15)",
-border: "1px solid rgba(239,68,68,0.4)",
-color: "#f87171",
-padding: "10px 14px",
-borderRadius: "8px",
-cursor: "pointer",
-fontSize: "1rem",
-textAlign: "left",
-marginTop: "4px",
-}}
->
-Logout
-</button>
-</>
-) : (
-<>
-<Link
-to="/login"
-onClick={() => setMenuOpen(false)}
+  return (
+    <nav className="bg-[#F6F4ED] border-b border-[#E4E0D2] sticky top-0 z-50 font-['Inter',sans-serif]">
+      <div className="max-w-[1280px] mx-auto px-6 flex items-center justify-between h-[68px]">
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-2.5 no-underline">
+          <img
+            src="/logo.jpg"
+            alt="InnovationAILabs"
+            className="h-9 w-auto rounded"
+          />
+          <span className="font-['Sora',sans-serif] font-extrabold text-[1.1rem] tracking-tight text-[#12172B]">
+            Innovation<span className="text-[#C9821B]">AI</span>Labs
+          </span>
+        </Link>
 
-style={{
-color: "rgba(255,255,255,0.85)",
-textDecoration: "none",
-padding: "10px 14px",
-borderRadius: "8px",
-border: "1px solid rgba(255,255,255,0.2)",
-textAlign: "center",
-marginTop: "8px",
-}}
->
-Login
-</Link>
-<Link
-to="/register"
-onClick={() => setMenuOpen(false)}
-style={{
-background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-color: "#fff",
-textDecoration: "none",
-padding: "10px 14px",
-borderRadius: "8px",
-textAlign: "center",
-fontWeight: 600,
-marginTop: "6px",
-}}
->
-Get Started
-</Link>
-</>
-)}
-</div>
-)}
-<style>{`
-@media (max-width: 768px) {
-.desktop-nav { display: none !important; }
-.hamburger-btn { display: block !important; }
-}
-`}</style>
-</nav>
-);
+        {/* Desktop Nav */}
+        <div className="hidden md:flex items-center gap-2">
+          {navLinks.map((link) => (
+            <Link key={link.to} to={link.to} className={linkClass(link.to)}>
+              {link.label}
+            </Link>
+          ))}
+
+          {user ? (
+            <div className="flex items-center gap-2 ml-2">
+              <Link to="/dashboard" className={linkClass("/dashboard")}>
+                Dashboard
+              </Link>
+              <button
+                onClick={logout}
+                className="bg-[#F3D8D5] border border-[#E3A9A3] text-[#B14A42] px-4 py-[7px] rounded-[3px] text-[0.9rem] font-medium hover:bg-[#EEC4BE] transition-colors"
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2.5 ml-2">
+              <Link
+                to="/login"
+                className="text-[#12172B] px-4 py-[7px] rounded-[3px] text-[0.9rem] border border-[#12172B]/25 hover:bg-[#12172B]/5 transition-colors"
+              >
+                Login
+              </Link>
+              <Link
+                to="/register"
+                className="bg-[#F2A93B] text-[#12172B] px-4 py-[7px] rounded-[3px] text-[0.9rem] font-bold hover:bg-[#F5BC63] transition-colors"
+              >
+                Get Started
+              </Link>
+            </div>
+          )}
+        </div>
+
+        {/* Hamburger */}
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          className="md:hidden text-[#12172B] text-2xl bg-none border-none cursor-pointer p-1"
+        >
+          {menuOpen ? "✕" : "☰"}
+        </button>
+      </div>
+
+      {/* Mobile Menu */}
+      {menuOpen && (
+        <div className="bg-[#F6F4ED] border-t border-[#E4E0D2] px-6 py-4 flex flex-col gap-1 md:hidden">
+          {navLinks.map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              onClick={() => setMenuOpen(false)}
+              className={`px-3.5 py-2.5 rounded-[3px] text-[1rem] ${
+                isActive(link.to)
+                  ? "text-[#12172B] font-semibold bg-[#F2A93B]/15"
+                  : "text-[#2B3252]"
+              }`}
+            >
+              {link.label}
+            </Link>
+          ))}
+
+          {user ? (
+            <>
+              <Link
+                to="/dashboard"
+                onClick={() => setMenuOpen(false)}
+                className="text-[#2B3252] px-3.5 py-2.5 rounded-[3px] text-[1rem]"
+              >
+                Dashboard
+              </Link>
+              <button
+                onClick={() => {
+                  logout();
+                  setMenuOpen(false);
+                }}
+                className="bg-[#F3D8D5] border border-[#E3A9A3] text-[#B14A42] px-3.5 py-2.5 rounded-[3px] text-[1rem] text-left mt-1"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                onClick={() => setMenuOpen(false)}
+                className="text-[#12172B] px-3.5 py-2.5 rounded-[3px] border border-[#12172B]/25 text-center mt-2"
+              >
+                Login
+              </Link>
+              <Link
+                to="/register"
+                onClick={() => setMenuOpen(false)}
+                className="bg-[#F2A93B] text-[#12172B] px-3.5 py-2.5 rounded-[3px] text-center font-bold mt-1.5"
+              >
+                Get Started
+              </Link>
+            </>
+          )}
+        </div>
+      )}
+    </nav>
+  );
 }

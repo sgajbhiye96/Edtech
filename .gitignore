@@ -13,6 +13,7 @@ env/
 venv/
 ENV/
 .venv/
+.env
 
 # Distribution / packaging
 build/
