@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (
     CourseListView, CourseDetailView, CourseCreateView,
-    BatchListView, BatchDetailView, BatchCreateView, AdminBatchListView, AdminBatchDetailView,
+    BatchListView, BatchDetailView, BatchCreateView, AdminBatchListView, AdminBatchDetailView, AdminBatchStudentsView,
     LiveClassListView, LiveClassCreateView, AdminLiveClassDetailView,
     LearningResourceListView, LearningResourceCreateView, AdminLearningResourceDetailView,
     AssignmentListView, AssignmentCreateView, AdminAssignmentDetailView,
@@ -17,6 +17,7 @@ urlpatterns = [
     path("batches/admin/", AdminBatchListView.as_view(), name="admin-batch-list"),
     path("batches/admin/create/", BatchCreateView.as_view(), name="batch-create"),
     path("batches/admin/<int:pk>/", AdminBatchDetailView.as_view(), name="admin-batch-detail"),
+    path("batches/admin/<int:pk>/students/", AdminBatchStudentsView.as_view(), name="admin-batch-students"),
     path("live-classes/", LiveClassListView.as_view(), name="live-class-list"),
     path("live-classes/admin/create/", LiveClassCreateView.as_view(), name="live-class-create"),
     path("live-classes/admin/<int:pk>/", AdminLiveClassDetailView.as_view(), name="admin-live-class-detail"),
