@@ -49,20 +49,24 @@ def activate_enrollment(payment):
         if locked_payment.status != "SUCCESS":
             return
 
+        # Serialize activation against other payments for the same batch.
+        # The pending enrollment created during order creation is the seat
+        # reservation, so it must not be counted against itself.
+        batch = Batch.objects.select_for_update().get(pk=locked_payment.batch_id)
         enrollment = (
             Enrollment.objects.select_for_update()
-            .filter(user=locked_payment.user, batch=locked_payment.batch)
+            .filter(user=locked_payment.user, batch=batch)
             .first()
         )
 
         if enrollment and enrollment.status == "ACTIVE":
             return
 
-        active_count = locked_payment.batch.enrollments.filter(
-            status="ACTIVE"
+        active_count = batch.enrollments.filter(status="ACTIVE").exclude(
+            pk=enrollment.pk if enrollment else None
         ).count()
 
-        if active_count >= locked_payment.batch.max_students:
+        if active_count >= batch.max_students:
             raise ValueError("This batch is full.")
 
         if enrollment:
@@ -71,7 +75,7 @@ def activate_enrollment(payment):
         else:
             Enrollment.objects.create(
                 user=locked_payment.user,
-                batch=locked_payment.batch,
+                batch=batch,
                 status="ACTIVE",
             )
 
