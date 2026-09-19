@@ -209,10 +209,15 @@ class PaymentEnrollmentIntegrationTests(TestCase):
             200,
         )
 
-        duplicate = self.create_order(self.student)
-        self.assertEqual(duplicate["order_id"], "order_student")
+        self.auth(self.student)
+        duplicate = self.client.post(
+            "/api/payments/create-order/",
+            {"batch_id": self.batch.id},
+            format="json",
+        )
+        self.assertEqual(duplicate.status_code, 409)
 
-        # A second order is allowed because max_students is 2.
+        # A second student can reserve the remaining seat.
         self.create_order(self.other_student)
         self.assertEqual(Enrollment.objects.filter(status="PENDING_PAYMENT").count(), 1)
 
