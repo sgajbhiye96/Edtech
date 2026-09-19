@@ -22,6 +22,7 @@ export default function Batches() {
   const [resource, setResource] = useState(forms.resource);
   const [assignment, setAssignment] = useState(forms.assignment);
   const [project, setProject] = useState(forms.project);
+  const [students, setStudents] = useState([]);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
 
@@ -37,11 +38,22 @@ export default function Batches() {
 
   useEffect(() => { load(); }, []);
 
-  const choose = (id) => {
+  const choose = async (id) => {
     setNotice(""); setError("");
     setSelected(id);
     const found = batches.find((item) => String(item.id) === String(id));
     setBatch(found ? { ...found, early_bird_price: found.early_bird_price || "" } : blank);
+    if (id) {
+      try {
+        const response = await API.get(`/courses/batches/admin/${id}/students/`);
+        setStudents(response.data);
+      } catch {
+        setStudents([]);
+        setError("Could not load students for this batch.");
+      }
+    } else {
+      setStudents([]);
+    }
   };
 
   const saveBatch = async (event) => {
