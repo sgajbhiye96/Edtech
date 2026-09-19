@@ -1,115 +1,118 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import API from "../services/api";
+
 export default function Register() {
-const [form, setForm] = useState({ username: "", email: "", password: "" });
-const [error, setError] = useState("");
-const [loading, setLoading] = useState(false);
-const navigate = useNavigate();
-const submit = async (e) => {
-e.preventDefault();
-setError("");
-if (!form.username || !form.email || !form.password) {
-setError("All fields are required.");
-return;
-}
-if (form.password.length < 6) {
-setError("Password must be at least 6 characters.");
-return;
-}
-setLoading(true);
-try {
-await API.post("/users/register/", form);
-navigate("/login", { state: { registered: true } });
-} catch (err) {
-const data = err?.response?.data;
-const status = err?.response?.status;
-// Django returns field-level errors as objects
-if (data && typeof data === "object") {
-const firstError = Object.values(data).flat()[0];
-setError(` ${firstError}`);
-} else if (status === 400) {
-setError(" Registration failed. Please check your details.");
-} else if (!status) {
-setError(" Cannot reach server. Check your internet connection.");
-} else {
-setError(" Registration failed. Please try again.");
-}
-} finally {
-setLoading(false);
+  const [form, setForm] = useState({ username: "", email: "", password: "" });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-}
-};
-return (
-<div className="flex justify-center items-center min-h-screen bg-gray-100 dark:bg-gray-900 px-4">
-<div className="bg-white dark:bg-gray-800 p-6 md:p-8 shadow-xl rounded-xl w-full max-w-sm">
-<h2
-className="text-2xl md:text-3xl font-semibold text-center mb-2 dark:text-white"
-style={{ fontFamily: "'Syne', sans-serif" }}
->
-Create Account
-</h2>
-<p className="text-center text-gray-500 dark:text-gray-400 text-sm mb-6">
-Join InnovationAILabs and start learning today
-</p>
-{error && (
-<div className="mb-4 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3 text-center dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
-{error}
-</div>
-)}
-<form onSubmit={submit}>
-<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-Username
-</label>
-<input
-className="w-full mb-4 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-600 text-sm"
-placeholder="Choose a username"
-autoComplete="username"
-value={form.username}
-onChange={(e) => setForm({ ...form, username: e.target.value })}
-/>
-<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-Email
-</label>
-<input
-type="email"
-className="w-full mb-4 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-600 text-sm"
-placeholder="your@email.com"
-autoComplete="email"
-value={form.email}
-onChange={(e) => setForm({ ...form, email: e.target.value })}
-/>
+  const submit = async (e) => {
+    e.preventDefault();
+    setError("");
+    if (!form.username || !form.email || !form.password) {
+      setError("All fields are required.");
+      return;
+    }
+    if (form.password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+    setLoading(true);
+    try {
+      await API.post("/users/register/", form);
+      navigate("/login", { state: { registered: true } });
+    } catch (err) {
+      const data = err?.response?.data;
+      const status = err?.response?.status;
+      if (data && typeof data === "object") {
+        const firstError = Object.values(data).flat()[0];
+        setError(`${firstError}`);
+      } else if (status === 400) {
+        setError("Registration failed. Please check your details.");
+      } else if (!status) {
+        setError("Cannot reach server. Check your internet connection.");
+      } else {
+        setError("Registration failed. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
-<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-Password
-</label>
-<input
-type="password"
-className="w-full mb-6 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-600 text-sm"
-placeholder="Min. 6 characters"
-autoComplete="new-password"
-value={form.password}
-onChange={(e) => setForm({ ...form, password: e.target.value })}
-/>
-<button
-type="submit"
-disabled={loading}
-className="w-full py-3 font-semibold rounded-lg transition text-white"
-style={{
-background: loading ? "#9ca3af" : "linear-gradient(135deg, #10b981, #059669)",
-cursor: loading ? "not-allowed" : "pointer",
-}}
->
-{loading ? "Creating account..." : "Create Account →"}
-</button>
-</form>
-<p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">
-Already have an account?{" "}
-<Link to="/login" className="text-blue-600 hover:underline font-medium">
-Login here
-</Link>
-</p>
-</div>
-</div>
-);
+  return (
+    <div className="flex justify-center items-center min-h-screen bg-[#F6F4ED] px-4 py-16 font-['Inter',sans-serif]">
+      <div className="bg-white border border-[#E4E0D2] p-8 md:p-10 rounded-md w-full max-w-sm">
+        <h2 className="font-['Sora',sans-serif] text-2xl md:text-[26px] font-bold text-center mb-2 text-[#12172B]">
+          Create your account
+        </h2>
+        <p className="text-center text-[#2B3252] text-sm mb-7">
+          Join InnovationAILabs and start building today
+        </p>
+
+        {error && (
+          <div className="mb-5 bg-[#F3D8D5] border border-[#E3A9A3] text-[#B14A42] text-sm rounded-[3px] px-4 py-3 text-center">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={submit}>
+          <label className="block text-sm font-medium text-[#2B3252] mb-1.5">
+            Username
+          </label>
+          <input
+            className="w-full mb-4 px-3.5 py-2.5 border border-[#E4E0D2] rounded-[3px] focus:outline-none focus:ring-2 focus:ring-[#F2A93B] text-sm text-[#12172B]"
+            placeholder="Choose a username"
+            autoComplete="username"
+            value={form.username}
+            onChange={(e) => setForm({ ...form, username: e.target.value })}
+          />
+
+          <label className="block text-sm font-medium text-[#2B3252] mb-1.5">
+            Email
+          </label>
+          <input
+            type="email"
+            className="w-full mb-4 px-3.5 py-2.5 border border-[#E4E0D2] rounded-[3px] focus:outline-none focus:ring-2 focus:ring-[#F2A93B] text-sm text-[#12172B]"
+            placeholder="your@email.com"
+            autoComplete="email"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+          />
+
+          <label className="block text-sm font-medium text-[#2B3252] mb-1.5">
+            Password
+          </label>
+          <input
+            type="password"
+            className="w-full mb-6 px-3.5 py-2.5 border border-[#E4E0D2] rounded-[3px] focus:outline-none focus:ring-2 focus:ring-[#F2A93B] text-sm text-[#12172B]"
+            placeholder="Min. 6 characters"
+            autoComplete="new-password"
+            value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+          />
+
+          <button
+            type="submit"
+            disabled={loading}
+            className={`w-full py-3 font-bold rounded-[3px] transition-colors ${
+              loading
+                ? "bg-[#C9CBD6] text-white cursor-not-allowed"
+                : "bg-[#F2A93B] text-[#12172B] hover:bg-[#F5BC63] cursor-pointer"
+            }`}
+          >
+            {loading ? "Creating account..." : "Create account"}
+          </button>
+        </form>
+
+        <p className="text-center text-sm text-[#2B3252] mt-5">
+          Already have an account?{" "}
+          <Link to="/login" className="text-[#C9821B] font-semibold hover:underline">
+            Login here
+          </Link>
+        </p>
+      </div>
+    </div>
+  );
 }

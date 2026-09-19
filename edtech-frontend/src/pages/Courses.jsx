@@ -1,295 +1,162 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import API from "../services/api";
+
 const CATEGORIES = ["All", "AI & Machine Learning", "Full Stack", "Data Science", "Python", "React"];
+
 function SkeletonCard() {
-return (
-<div style={{
-background: "#fff",
-borderRadius: "16px",
-overflow: "hidden",
-border: "1px solid #f0f0f0",
-animation: "pulse 1.5s ease-in-out infinite",
-}}>
-<div style={{ height: "180px", background: "#f3f4f6" }} />
-<div style={{ padding: "20px" }}>
-<div style={{ height: "16px", background: "#f3f4f6", borderRadius: "8px", marginBottom: "10px" }} />
-<div style={{ height: "12px", background: "#f3f4f6", borderRadius: "8px", width: "70%", marginBottom: "20px" }} />
-<div style={{ height: "36px", background: "#f3f4f6", borderRadius: "8px", width: "40%" }} />
-</div>
-<style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }`}</style>
-</div>
-);
+  return (
+    <div className="bg-white rounded-md overflow-hidden border border-[#E4E0D2] animate-pulse">
+      <div className="h-[180px] bg-[#EDEAE0]" />
+      <div className="p-5">
+        <div className="h-4 bg-[#EDEAE0] rounded mb-2.5" />
+        <div className="h-3 bg-[#EDEAE0] rounded w-[70%] mb-5" />
+        <div className="h-9 bg-[#EDEAE0] rounded w-[40%]" />
+      </div>
+    </div>
+  );
 }
+
 export default function Courses() {
-const [courses, setCourses] = useState([]);
-const [loading, setLoading] = useState(true);
-const [search, setSearch] = useState("");
-const [activeCategory, setActiveCategory] = useState("All");
-useEffect(() => {
-API.get("/courses/")
-.then((res) => {
-setCourses(res.data);
-setLoading(false);
-})
-.catch(() => setLoading(false));
-}, []);
-const filtered = courses.filter((c) => {
-const matchSearch =
-c.title.toLowerCase().includes(search.toLowerCase()) ||
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [activeCategory, setActiveCategory] = useState("All");
 
-c.description?.toLowerCase().includes(search.toLowerCase());
-const matchCat =
-activeCategory === "All" ||
-c.category?.toLowerCase().includes(activeCategory.toLowerCase());
-return matchSearch && matchCat;
-});
-return (
-<div style={{ fontFamily: "'DM Sans', sans-serif", background: "#fafafa", minHeight: "100vh" }}>
-{/* ── HEADER ── */}
-<section style={{
-background: "linear-gradient(135deg, #0f0c29 0%, #1a1a4e 60%, #0f0c29 100%)",
-padding: "60px 1.5rem 48px",
-textAlign: "center",
-}}>
-<h1 style={{
-fontFamily: "'Syne', sans-serif",
-fontSize: "clamp(1.8rem, 4vw, 3rem)",
-fontWeight: 800,
-color: "#fff",
-marginBottom: "12px",
-letterSpacing: "-0.02em",
-}}>
-Explore Our{" "}
-<span style={{
-background: "linear-gradient(90deg, #a78bfa, #60a5fa)",
-WebkitBackgroundClip: "text",
-WebkitTextFillColor: "transparent",
-}}>
-Courses
-</span>
-</h1>
-<p style={{ color: "rgba(255,255,255,0.55)", marginBottom: "32px", fontSize: "1rem" }}>
-Project-based learning for real-world careers.
-</p>
-{/* Search Bar */}
-<div style={{ maxWidth: "520px", margin: "0 auto", position: "relative" }}>
-<span style={{
-position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)",
-fontSize: "1.1rem", pointerEvents: "none",
-}}>
-</span>
-<input
-type="text"
+  useEffect(() => {
+    API.get("/courses/")
+      .then((res) => {
+        setCourses(res.data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
-placeholder="Search courses..."
-value={search}
-onChange={(e) => setSearch(e.target.value)}
-style={{
-width: "100%",
-padding: "14px 18px 14px 46px",
-borderRadius: "12px",
-border: "1px solid rgba(255,255,255,0.15)",
-background: "rgba(255,255,255,0.08)",
-color: "#fff",
-fontSize: "0.95rem",
-outline: "none",
-boxSizing: "border-box",
-backdropFilter: "blur(8px)",
-}}
-/>
-</div>
-</section>
-{/* ── CATEGORY FILTER ── */}
-<div style={{
-background: "#fff",
-borderBottom: "1px solid #f0f0f0",
-padding: "0 1.5rem",
-overflowX: "auto",
-}}>
-<div style={{
-maxWidth: "1100px",
-margin: "0 auto",
-display: "flex",
-gap: "4px",
-padding: "12px 0",
-whiteSpace: "nowrap",
-}}>
-{CATEGORIES.map((cat) => (
-<button
-key={cat}
-onClick={() => setActiveCategory(cat)}
-style={{
-padding: "7px 18px",
-borderRadius: "999px",
-border: "none",
-cursor: "pointer",
-fontSize: "0.88rem",
-fontWeight: activeCategory === cat ? 700 : 400,
-background: activeCategory === cat
-? "linear-gradient(135deg, #6366f1, #8b5cf6)"
+  const filtered = courses.filter((c) => {
+    const matchSearch =
+      c.title.toLowerCase().includes(search.toLowerCase()) ||
+      c.description?.toLowerCase().includes(search.toLowerCase());
+    const matchCat =
+      activeCategory === "All" ||
+      c.category?.toLowerCase().includes(activeCategory.toLowerCase());
+    return matchSearch && matchCat;
+  });
 
-: "transparent",
-color: activeCategory === cat ? "#fff" : "#6b7280",
-transition: "all 0.2s",
-fontFamily: "'DM Sans', sans-serif",
-}}
->
-{cat}
-</button>
-))}
-</div>
-</div>
-{/* ── COURSES GRID ── */}
-<section style={{ padding: "48px 1.5rem", maxWidth: "1100px", margin: "0 auto" }}>
-{/* Result count */}
-{!loading && (
-<p style={{ color: "#9ca3af", fontSize: "0.88rem", marginBottom: "24px" }}>
-Showing <strong style={{ color: "#374151" }}>{filtered.length}</strong> course{filtered.length !== 1 ? "s" : ""}
-{search && ` for "${search}"`}
-</p>
-)}
-<div style={{
-display: "grid",
-gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-gap: "24px",
-}}>
-{loading
-? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
-: filtered.length > 0
-? filtered.map((c) => (
-<div
-key={c.id}
-style={{
-background: "#fff",
-borderRadius: "16px",
-overflow: "hidden",
-border: "1px solid #f0f0f0",
-boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
-transition: "transform 0.2s, box-shadow 0.2s",
-display: "flex",
-flexDirection: "column",
-}}
-onMouseOver={(e) => {
-e.currentTarget.style.transform = "translateY(-4px)";
-e.currentTarget.style.boxShadow = "0 12px 40px rgba(99,102,241,0.15)";
+  return (
+    <div className="font-['Inter',sans-serif] bg-[#F6F4ED] min-h-screen">
+      {/* HEADER */}
+      <section className="bg-[#12172B] px-6 pt-16 pb-12 text-center">
+        <h1 className="font-['Sora',sans-serif] text-3xl md:text-5xl font-extrabold text-white mb-3 tracking-tight">
+          Explore our <span className="text-[#F2A93B]">courses</span>
+        </h1>
+        <p className="text-[#9AA3CC] mb-8">
+          Project-based learning for real-world careers.
+        </p>
 
-}}
-onMouseOut={(e) => {
-e.currentTarget.style.transform = "translateY(0)";
-e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.05)";
-}}
->
-<div style={{ position: "relative" }}>
-<img
-src={c.thumbnail}
-alt={c.title}
-style={{ width: "100%", height: "180px", objectFit: "cover", display: "block" }}
-/>
-{c.category && (
-<span style={{
-position: "absolute", top: "12px", left: "12px",
-background: "rgba(99,102,241,0.9)",
-color: "#fff",
-fontSize: "0.72rem",
-fontWeight: 600,
-padding: "4px 10px",
-borderRadius: "999px",
-textTransform: "uppercase",
-letterSpacing: "0.05em",
-}}>
-{c.category}
-</span>
-)}
-</div>
-<div style={{ padding: "20px", flex: 1, display: "flex", flexDirection: "column" }}>
-<h2 style={{
-fontFamily: "'Syne', sans-serif",
-fontWeight: 700,
-fontSize: "1.05rem",
-color: "#0f0c29",
-marginBottom: "8px",
-lineHeight: 1.3,
-}}>
-{c.title}
-</h2>
-<p style={{
-color: "#6b7280",
-fontSize: "0.88rem",
-lineHeight: 1.6,
-marginBottom: "auto",
-paddingBottom: "16px",
-}}>
+        <div className="max-w-[520px] mx-auto">
+          <input
+            type="text"
+            placeholder="Search courses..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full px-5 py-3.5 rounded-[3px] border border-white/15 bg-white/8 text-white placeholder-white/50 text-[0.95rem] outline-none focus:border-[#F2A93B]/60"
+          />
+        </div>
+      </section>
 
-{c.description?.slice(0, 90)}...
-</p>
-{/* Meta row */}
-<div style={{
-display: "flex",
-alignItems: "center",
-justifyContent: "space-between",
-paddingTop: "16px",
-borderTop: "1px solid #f3f4f6",
-}}>
-<div style={{ display: "flex", gap: "12px", fontSize: "0.78rem", color: "#9ca3af" }}>
-{c.duration && <span> {c.duration}</span>}
-{c.lessons_count && <span> {c.lessons_count} lessons</span>}
-</div>
-<Link
-to={`/courses/${c.id}`}
-style={{
-background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-color: "#fff",
-textDecoration: "none",
-padding: "8px 16px",
-borderRadius: "8px",
-fontSize: "0.85rem",
-fontWeight: 600,
-whiteSpace: "nowrap",
-}}
->
-View →
-</Link>
-</div>
-</div>
-</div>
-))
-: (
-<div style={{
-gridColumn: "1 / -1",
-textAlign: "center",
-padding: "80px 20px",
-color: "#9ca3af",
-}}>
-<div style={{ fontSize: "3rem", marginBottom: "16px" }}> </div>
-<h3 style={{ fontFamily: "'Syne', sans-serif", color: "#374151", marginBottom: "8px" }}>
-No courses found
-</h3>
-<p style={{ fontSize: "0.9rem" }}>
-Try a different search term or category.
+      {/* CATEGORY FILTER */}
+      <div className="bg-white border-b border-[#E4E0D2] px-6 overflow-x-auto">
+        <div className="max-w-[1100px] mx-auto flex gap-1.5 py-3 whitespace-nowrap">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`px-4.5 py-1.5 rounded-full text-[0.88rem] transition-colors ${
+                activeCategory === cat
+                  ? "bg-[#12172B] text-white font-semibold"
+                  : "text-[#2B3252] hover:bg-[#F6F4ED] font-normal"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      </div>
 
-</p>
-<button
-onClick={() => { setSearch(""); setActiveCategory("All"); }}
-style={{
-marginTop: "16px",
-background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-color: "#fff",
-border: "none",
-padding: "10px 24px",
-borderRadius: "8px",
-cursor: "pointer",
-fontWeight: 600,
-fontSize: "0.9rem",
-}}
->
-Clear Filters
-</button>
-</div>
-)
-}
-</div>
-</section>
-</div>
-);
+      {/* COURSES GRID */}
+      <section className="px-6 py-12 max-w-[1100px] mx-auto">
+        {!loading && (
+          <p className="text-[#9AA3CC] text-[0.88rem] mb-6">
+            Showing <strong className="text-[#2B3252]">{filtered.length}</strong> course
+            {filtered.length !== 1 ? "s" : ""}
+            {search && ` for "${search}"`}
+          </p>
+        )}
+
+        <div className="grid gap-6" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))" }}>
+          {loading ? (
+            Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
+          ) : filtered.length > 0 ? (
+            filtered.map((c) => (
+              <div
+                key={c.id}
+                className="bg-white rounded-md overflow-hidden border border-[#E4E0D2] flex flex-col transition-shadow hover:shadow-[0_12px_40px_-10px_rgba(18,23,43,0.15)] hover:-translate-y-1 duration-200"
+              >
+                <div className="relative">
+                  <img
+                    src={c.thumbnail}
+                    alt={c.title}
+                    className="w-full h-[180px] object-cover block"
+                  />
+                  {c.category && (
+                    <span className="absolute top-3 left-3 bg-[#12172B]/90 text-white text-[0.72rem] font-semibold px-2.5 py-1 rounded-full uppercase tracking-wide">
+                      {c.category}
+                    </span>
+                  )}
+                </div>
+
+                <div className="p-5 flex-1 flex flex-col">
+                  <h2 className="font-['Sora',sans-serif] font-bold text-[1.05rem] text-[#12172B] mb-2 leading-snug">
+                    {c.title}
+                  </h2>
+                  <p className="text-[#2B3252] text-[0.88rem] leading-relaxed mb-auto pb-4">
+                    {c.description?.slice(0, 90)}...
+                  </p>
+
+                  <div className="flex items-center justify-between pt-4 border-t border-[#EDEAE0]">
+                    <div className="flex gap-3 text-[0.78rem] text-[#9AA3CC]">
+                      {c.duration && <span>{c.duration}</span>}
+                      {c.lessons_count && <span>{c.lessons_count} lessons</span>}
+                    </div>
+                    <Link
+                      to={`/courses/${c.id}`}
+                      className="bg-[#F2A93B] text-[#12172B] px-4 py-2 rounded-[3px] text-[0.85rem] font-bold whitespace-nowrap hover:bg-[#F5BC63] transition-colors"
+                    >
+                      View
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="col-span-full text-center py-20 px-5 text-[#9AA3CC]">
+              <h3 className="font-['Sora',sans-serif] text-[#2B3252] mb-2 text-lg font-semibold">
+                No courses found
+              </h3>
+              <p className="text-[0.9rem]">Try a different search term or category.</p>
+              <button
+                onClick={() => {
+                  setSearch("");
+                  setActiveCategory("All");
+                }}
+                className="mt-4 bg-[#12172B] text-white border-none px-6 py-2.5 rounded-[3px] font-semibold text-[0.9rem] hover:bg-[#232A4A] transition-colors"
+              >
+                Clear filters
+              </button>
+            </div>
+          )}
+        </div>
+      </section>
+    </div>
+  );
 }
