@@ -12,6 +12,7 @@ export default function CourseDetails() {
   const [course, setCourse] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
+  const [selectedBatch, setSelectedBatch] = useState(null);
   const [enrolled, setEnrolled] = useState(false);
 
   useEffect(() => {
@@ -23,7 +24,7 @@ export default function CourseDetails() {
       API.get("/enrollments/")
         .then((res) => {
           const isEnrolled = res.data.some(
-            (e) => String(e.course) === String(id)
+            (e) => String(e.batch?.course || e.course) === String(id) && e.status === "ACTIVE"
           );
           setEnrolled(isEnrolled);
         })
@@ -36,21 +37,17 @@ export default function CourseDetails() {
       navigate("/login");
       return;
     }
+    if (!selectedBatch) {
+      window.alert("Please select a batch first.");
+      return;
+    }
     setShowPayment(true);
   };
 
   const handlePaymentSuccess = () => {
-    API.post("/enrollments/enroll/", { course: id })
-      .then(() => {
-        setEnrolled(true);
-        setShowPayment(false);
-        setTimeout(() => navigate("/dashboard"), 1800);
-      })
-      .catch(() => {
-        setEnrolled(true);
-        setShowPayment(false);
-        setTimeout(() => navigate("/dashboard"), 1800);
-      });
+    setEnrolled(true);
+    setShowPayment(false);
+    setTimeout(() => navigate("/dashboard"), 800);
   };
 
   if (!course)
@@ -68,7 +65,7 @@ export default function CourseDetails() {
         )}
         {showPayment && (
           <PaymentModal
-            course={course}
+            batch={selectedBatch}
             onClose={() => setShowPayment(false)}
             onSuccess={handlePaymentSuccess}
           />
@@ -86,6 +83,37 @@ export default function CourseDetails() {
         <p className="text-[#2B3252] text-sm md:text-base mb-7 leading-relaxed">
           {course.description}
         </p>
+
+        <div className="mb-8 rounded-md border border-[#E4E0D2] bg-white p-5">
+          <h2 className="font-['Sora',sans-serif] text-lg font-bold text-[#12172B]">
+            Choose your live batch
+          </h2>
+          <p className="mt-1 text-sm text-[#6B7280]">
+            Select the cohort you want to join before continuing to payment.
+          </p>
+          <div className="mt-4 space-y-3">
+            {(course.batches || []).filter((b) => b.registration_open).map((batch) => (
+              <button
+                key={batch.id}
+                type="button"
+                onClick={() => setSelectedBatch({ ...batch, course_title: course.title })}
+                className={`w-full rounded-md border p-4 text-left transition ${selectedBatch?.id === batch.id ? "border-[#F2A93B] bg-[#FFF8EA]" : "border-[#E4E0D2] hover:border-[#12172B]"}`}
+              >
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <div className="font-bold text-[#12172B]">{batch.name}</div>
+                    <div className="text-sm text-[#6B7280]">{batch.start_date} → {batch.end_date}</div>
+                  </div>
+                  <div className="font-bold text-[#12172B]">₹{Number(batch.price).toLocaleString("en-IN")}</div>
+                </div>
+                <div className="mt-2 text-xs text-[#9AA3CC]">{batch.enrolled_count}/{batch.max_students} seats filled</div>
+              </button>
+            ))}
+          </div>
+          {(!course.batches || course.batches.filter((b) => b.registration_open).length === 0) && (
+            <p className="mt-4 text-sm text-[#9AA3CC]">No live batches are currently open for registration.</p>
+          )}
+        </div>
 
         <div className="flex flex-col sm:flex-row gap-4 mb-10">
           {enrolled ? (
