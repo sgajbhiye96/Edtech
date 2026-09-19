@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import API from "../services/api";
 
 const RAZORPAY_SCRIPT = "https://checkout.razorpay.com/v1/checkout.js";
@@ -17,13 +17,19 @@ function loadRazorpay() {
 export default function PaymentModal({ batch, onClose, onSuccess }) {
   const [step, setStep] = useState("creating");
   const [error, setError] = useState("");
+  const stepRef = useRef("creating");
 
   useEffect(() => {
     startPayment();
   }, []);
 
+  const updateStep = (nextStep) => {
+    stepRef.current = nextStep;
+    setStep(nextStep);
+  };
+
   const startPayment = async () => {
-    setStep("creating");
+    updateStep("creating");
     setError("");
 
     try {
@@ -43,11 +49,11 @@ export default function PaymentModal({ batch, onClose, onSuccess }) {
         description: batch.course_title || batch.name,
         order_id,
         handler: async (response) => {
-          setStep("verifying");
+          updateStep("verifying");
           try {
             const verifyResponse = await API.post("/payments/verify/", response.data);
             if (verifyResponse.data.status === "SUCCESS") {
-              setStep("success");
+              updateStep("success");
               onSuccess?.(verifyResponse.data);
             } else {
               throw new Error("Payment could not be verified.");
@@ -57,12 +63,12 @@ export default function PaymentModal({ batch, onClose, onSuccess }) {
               err?.response?.data?.error ||
                 "Payment verification failed. If money was deducted, please contact support."
             );
-            setStep("failed");
+            updateStep("failed");
           }
         },
         modal: {
           ondismiss: () => {
-            if (step !== "verifying") setStep("cancelled");
+            if (stepRef.current !== "verifying") updateStep("cancelled");
           },
         },
         theme: { color: "#12172B" },
@@ -71,13 +77,13 @@ export default function PaymentModal({ batch, onClose, onSuccess }) {
       const razorpay = new window.Razorpay(options);
       razorpay.on("payment.failed", (response) => {
         setError(response?.error?.description || "Payment failed. Please try again.");
-        setStep("failed");
+        updateStep("failed");
       });
       setStep("paying");
       razorpay.open();
     } catch (err) {
       setError(err?.response?.data?.error || err?.message || "Unable to start payment.");
-      setStep("failed");
+      updateStep("failed");
     }
   };
 
