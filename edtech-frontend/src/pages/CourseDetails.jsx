@@ -16,20 +16,41 @@ export default function CourseDetails() {
   const [enrolled, setEnrolled] = useState(false);
 
   useEffect(() => {
-    API.get(`/courses/${id}/`)
-      .then((res) => setCourse(res.data))
-      .catch((err) => console.log("Error:", err));
+    let cancelled = false;
 
-    if (user) {
-      API.get("/enrollments/")
-        .then((res) => {
-          const isEnrolled = res.data.some(
-            (e) => String(e.batch?.course || e.course) === String(id) && e.status === "ACTIVE"
+    const load = async () => {
+      try {
+        const courseResponse = await API.get(`/courses/${id}/`);
+        if (cancelled) return;
+
+        const courseData = courseResponse.data;
+        setCourse(courseData);
+
+        if (user) {
+          const enrollmentResponse = await API.get("/enrollments/");
+          if (cancelled) return;
+
+          const courseBatchIds = new Set(
+            (courseData.batches || []).map((batch) => String(batch.id))
+          );
+          const isEnrolled = enrollmentResponse.data.some(
+            (enrollment) =>
+              enrollment.status === "ACTIVE" &&
+              courseBatchIds.has(String(enrollment.batch))
           );
           setEnrolled(isEnrolled);
-        })
-        .catch(() => {});
-    }
+        } else {
+          setEnrolled(false);
+        }
+      } catch (err) {
+        if (!cancelled) console.log("Error:", err);
+      }
+    };
+
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, [id, user]);
 
   const handleEnrollClick = () => {
