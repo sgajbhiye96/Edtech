@@ -59,7 +59,39 @@ export default function Batches() {
     }
   };
 
-  const loadContent = async (id) => {\n    const [live, resource, assignment, project] = await Promise.all([\n      API.get("/courses/live-classes/admin/?batch=" + id),\n      API.get("/courses/resources/admin/?batch=" + id),\n      API.get("/courses/assignments/admin/?batch=" + id),\n      API.get("/courses/projects/admin/?batch=" + id),\n    ]);\n    setContent({ live: live.data, resource: resource.data, assignment: assignment.data, project: project.data });\n  };\n\n  const saveContent = async (kind, value) => {\n    const endpoint = { live: "live-classes", resource: "resources", assignment: "assignments", project: "projects" }[kind];\n    try {\n      const payload = { ...value, batch: Number(selected) };\n      if (editing?.id) await API.patch("/courses/" + endpoint + "/admin/" + editing.id + "/", payload);\n      else await API.post("/courses/" + endpoint + "/admin/create/", payload);\n      setNotice(editing?.id ? "Content updated." : "Content added.");\n      setEditing(null); setDraft(null);\n      await loadContent(selected);\n    } catch (err) { setError(JSON.stringify(err?.response?.data || "Could not save content.")); }\n  };\n\n  const deleteContent = async (kind, id) => {\n    if (!window.confirm("Delete this item?")) return;\n    const endpoint = { live: "live-classes", resource: "resources", assignment: "assignments", project: "projects" }[kind];\n    try { await API.delete("/courses/" + endpoint + "/admin/" + id + "/"); setNotice("Content deleted."); await loadContent(selected); }\n    catch (err) { setError(JSON.stringify(err?.response?.data || "Could not delete content.")); }\n  };\n\n  const startAdd = (kind) => { setEditing({ kind, id: null }); setDraft({ ...forms[kind] }); };\n  const startEdit = (kind, item) => { setEditing({ kind, id: item.id }); setDraft({ ...item, scheduled_at: item.scheduled_at ? item.scheduled_at.slice(0, 16) : "", due_at: item.due_at ? item.due_at.slice(0, 16) : "" }); };\n\n  const saveBatch = async (event) => {
+  const loadContent = async (id) => {
+    const [live, resource, assignment, project] = await Promise.all([
+      API.get("/courses/live-classes/admin/?batch=" + id),
+      API.get("/courses/resources/admin/?batch=" + id),
+      API.get("/courses/assignments/admin/?batch=" + id),
+      API.get("/courses/projects/admin/?batch=" + id),
+    ]);
+    setContent({ live: live.data, resource: resource.data, assignment: assignment.data, project: project.data });
+  };
+
+  const saveContent = async (kind, value) => {
+    const endpoint = { live: "live-classes", resource: "resources", assignment: "assignments", project: "projects" }[kind];
+    try {
+      const payload = { ...value, batch: Number(selected) };
+      if (editing?.id) await API.patch("/courses/" + endpoint + "/admin/" + editing.id + "/", payload);
+      else await API.post("/courses/" + endpoint + "/admin/create/", payload);
+      setNotice(editing?.id ? "Content updated." : "Content added.");
+      setEditing(null); setDraft(null);
+      await loadContent(selected);
+    } catch (err) { setError(JSON.stringify(err?.response?.data || "Could not save content.")); }
+  };
+
+  const deleteContent = async (kind, id) => {
+    if (!window.confirm("Delete this item?")) return;
+    const endpoint = { live: "live-classes", resource: "resources", assignment: "assignments", project: "projects" }[kind];
+    try { await API.delete("/courses/" + endpoint + "/admin/" + id + "/"); setNotice("Content deleted."); await loadContent(selected); }
+    catch (err) { setError(JSON.stringify(err?.response?.data || "Could not delete content.")); }
+  };
+
+  const startAdd = (kind) => { setEditing({ kind, id: null }); setDraft({ ...forms[kind] }); };
+  const startEdit = (kind, item) => { setEditing({ kind, id: item.id }); setDraft({ ...item, scheduled_at: item.scheduled_at ? item.scheduled_at.slice(0, 16) : "", due_at: item.due_at ? item.due_at.slice(0, 16) : "" }); };
+
+  const saveBatch = async (event) => {
     event.preventDefault();
     setNotice(""); setError("");
     const payload = {
@@ -138,22 +170,40 @@ export default function Batches() {
       </section>
 
       {selected && (
-        <div className="grid lg:grid-cols-2 gap-6">
-          <Content title="Live class" fields={live} setFields={setLive} fieldsConfig={[
-            ["title", "Title", "text", true], ["description", "Description", "text", false],
-            ["scheduled_at", "Scheduled at", "datetime-local", true], ["duration_minutes", "Duration", "number", true],
-            ["meeting_url", "Meeting URL", "url", false], ["recording_url", "Recording URL", "url", false],
-          ]} extra={<label className="flex gap-2"><input type="checkbox" checked={live.recording_available} onChange={(e) => setLive({ ...live, recording_available: e.target.checked })} /> Recording available</label>} onSubmit={(e) => { e.preventDefault(); addContent("live-classes", live, () => setLive(forms.live)); }} />
-          <Content title="Resource" fields={resource} setFields={setResource} fieldsConfig={[["title","Title","text",true],["description","Description","text",false],["url","URL","url",false]]} extra={<select value={resource.resource_type} onChange={(e) => setResource({ ...resource, resource_type: e.target.value })} className="border rounded p-3 w-full"><option>LINK</option><option>FILE</option><option>NOTE</option></select>} onSubmit={(e) => { e.preventDefault(); addContent("resources", resource, () => setResource(forms.resource)); }} />
-          <Content title="Assignment" fields={assignment} setFields={setAssignment} fieldsConfig={[["title","Title","text",true],["description","Description","text",false],["due_at","Due at","datetime-local",false],["submission_url","Submission URL","url",false]]} onSubmit={(e) => { e.preventDefault(); addContent("assignments", assignment, () => setAssignment(forms.assignment)); }} />
-          <Content title="Project" fields={project} setFields={setProject} fieldsConfig={[["title","Title","text",true],["description","Description","text",false],["repository_url","Repository URL","url",false]]} onSubmit={(e) => { e.preventDefault(); addContent("projects", project, () => setProject(forms.project)); }} />
-        </div>
+        <>
+          <section className="bg-white p-6 rounded-xl shadow">
+            <h2 className="text-xl font-semibold mb-4">Enrolled students ({students.length}/{batch.max_students})</h2>
+            {students.length ? <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="text-left border-b"><th className="py-2">Student</th><th className="py-2">Email</th><th className="py-2">Status</th><th className="py-2">Enrolled</th></tr></thead><tbody>{students.map(s => <tr key={s.id} className="border-b"><td className="py-3">{s.username}</td><td>{s.email || "—"}</td><td>{s.status}</td><td>{new Date(s.enrolled_at).toLocaleDateString("en-IN")}</td></tr>)}</tbody></table></div> : <p className="text-gray-500">No students yet.</p>}
+          </section>
+          <div className="grid lg:grid-cols-2 gap-6">
+            {Object.entries({ live: "Live classes", resource: "Resources", assignment: "Assignments", project: "Projects" }).map(([kind, title]) => (
+              <section key={kind} className="bg-white p-6 rounded-xl shadow">
+                <div className="flex justify-between items-center mb-4"><h2 className="text-lg font-semibold">{title}</h2><button type="button" onClick={() => startAdd(kind)} className="bg-[#F2A93B] text-[#12172B] rounded px-3 py-2 font-semibold">+ Add</button></div>
+                {content[kind].length === 0 ? <p className="text-sm text-gray-500">Nothing added yet.</p> : <div className="space-y-3">{content[kind].map(item => <div key={item.id} className="border rounded-lg p-4"><div className="font-semibold">{item.title}</div><div className="text-sm text-gray-500 mt-1">{kind === "live" && item.scheduled_at ? new Date(item.scheduled_at).toLocaleString("en-IN") : kind === "assignment" && item.due_at ? "Due " + new Date(item.due_at).toLocaleString("en-IN") : item.description || "No description"}</div><div className="flex gap-2 mt-3"><button type="button" onClick={() => startEdit(kind, item)} className="border rounded px-3 py-1 text-sm">Edit</button><button type="button" onClick={() => deleteContent(kind, item.id)} className="border border-red-300 text-red-700 rounded px-3 py-1 text-sm">Delete</button></div></div>)}</div>}
+              </section>
+            ))}
+          </div>
+          {editing && <section className="bg-white p-6 rounded-xl shadow border-2 border-[#F2A93B]"><h2 className="text-xl font-semibold mb-4">{editing.id ? "Edit" : "Add"} {editing.kind}</h2><ContentForm kind={editing.kind} value={draft} setValue={setDraft} onCancel={() => { setEditing(null); setDraft(null); }} onSubmit={e => { e.preventDefault(); saveContent(editing.kind, draft); }} /></section>}
+        </>
       )}
     </div>
   );
 }
 
-function ContentForm({ kind, value, setValue, onCancel, onSubmit }) {\n  const fieldsConfig = {\n    live: [["title","Title","text",true],["description","Description","text",false],["scheduled_at","Scheduled at","datetime-local",true],["duration_minutes","Duration","number",true],["meeting_url","Meeting URL","url",false],["recording_url","Recording URL","url",false]],\n    resource: [["title","Title","text",true],["description","Description","text",false],["url","URL","url",false]],\n    assignment: [["title","Title","text",true],["description","Description","text",false],["due_at","Due at","datetime-local",false],["submission_url","Submission URL","url",false]],\n    project: [["title","Title","text",true],["description","Description","text",false],["repository_url","Repository URL","url",false]],\n  }[kind];\n  return <form onSubmit={onSubmit} className="grid md:grid-cols-2 gap-4">{fieldsConfig.map(([key,label,type,required]) => <input key={key} required={required} type={type} placeholder={label} value={value?.[key] || ""} onChange={e => setValue({ ...value, [key]: e.target.value })} className="border rounded p-3" />)}\n    {kind === "live" && <label className="flex gap-2 p-3"><input type="checkbox" checked={Boolean(value.recording_available)} onChange={e => setValue({ ...value, recording_available: e.target.checked })} /> Recording available</label>}\n    {kind === "resource" && <select value={value.resource_type || "LINK"} onChange={e => setValue({ ...value, resource_type: e.target.value })} className="border rounded p-3"><option>LINK</option><option>FILE</option><option>NOTE</option></select>}\n    <div className="md:col-span-2 flex gap-3"><button className="bg-[#12172B] text-white rounded p-3 font-semibold">Save</button><button type="button" onClick={onCancel} className="border rounded p-3">Cancel</button></div></form>;\n}\n\nfunction Content({ title, fields, setFields, fieldsConfig, extra, onSubmit }) {
+function ContentForm({ kind, value, setValue, onCancel, onSubmit }) {
+  const configs = {
+    live: [["title","Title","text",true],["description","Description","text",false],["scheduled_at","Scheduled at","datetime-local",true],["duration_minutes","Duration","number",true],["meeting_url","Meeting URL","url",false],["recording_url","Recording URL","url",false]],
+    resource: [["title","Title","text",true],["description","Description","text",false],["url","URL","url",false]],
+    assignment: [["title","Title","text",true],["description","Description","text",false],["due_at","Due at","datetime-local",false],["submission_url","Submission URL","url",false]],
+    project: [["title","Title","text",true],["description","Description","text",false],["repository_url","Repository URL","url",false]],
+  };
+  return <form onSubmit={onSubmit} className="grid md:grid-cols-2 gap-4">{configs[kind].map(([key,label,type,required]) => <input key={key} required={required} type={type} placeholder={label} value={value?.[key] || ""} onChange={e => setValue({...value,[key]:e.target.value})} className="border rounded p-3" />)}
+    {kind === "live" && <label className="flex gap-2 p-3"><input type="checkbox" checked={Boolean(value.recording_available)} onChange={e => setValue({...value,recording_available:e.target.checked})} /> Recording available</label>}
+    {kind === "resource" && <select value={value.resource_type || "LINK"} onChange={e => setValue({...value,resource_type:e.target.value})} className="border rounded p-3"><option>LINK</option><option>FILE</option><option>NOTE</option></select>}
+    <div className="md:col-span-2 flex gap-3"><button className="bg-[#12172B] text-white rounded p-3 font-semibold">Save</button><button type="button" onClick={onCancel} className="border rounded p-3">Cancel</button></div>
+  </form>;
+}
+function Content({ title, fields, setFields, fieldsConfig, extra, onSubmit }) {
   return (
     <section className="bg-white p-6 rounded-xl shadow">
       <h2 className="text-lg font-semibold mb-4">{title}</h2>
