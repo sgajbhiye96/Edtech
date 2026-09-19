@@ -30,12 +30,21 @@ def migrate_course_enrollments(apps, schema_editor):
         )
         batches[course.id] = batch.id
 
-    for enrollment in Enrollment.objects.all():
+    seen = set()
+    for enrollment in Enrollment.objects.order_by("id"):
         batch_id = batches.get(enrollment.course_id)
-        if batch_id:
-            enrollment.batch_id = batch_id
-            enrollment.status = "ACTIVE"
-            enrollment.save(update_fields=["batch_id", "status"])
+        if not batch_id:
+            continue
+
+        key = (enrollment.user_id, batch_id)
+        if key in seen:
+            enrollment.delete()
+            continue
+
+        enrollment.batch_id = batch_id
+        enrollment.status = "ACTIVE"
+        enrollment.save(update_fields=["batch_id", "status"])
+        seen.add(key)
 
 
 class Migration(migrations.Migration):
