@@ -153,12 +153,20 @@ class CreateOrderView(APIView):
                 status=status.HTTP_409_CONFLICT,
             )
 
-        active_count = batch.enrollments.filter(status="ACTIVE").count()
-        if active_count >= batch.max_students:
+        reserved_count = batch.enrollments.filter(
+            status__in=("ACTIVE", "PENDING_PAYMENT")
+        ).count()
+        if reserved_count >= batch.max_students:
             return Response(
                 {"error": "This batch is full."},
                 status=status.HTTP_409_CONFLICT,
             )
+
+        Enrollment.objects.get_or_create(
+            user=request.user,
+            batch=batch,
+            defaults={"status": "PENDING_PAYMENT"},
+        )
 
         amount = Decimal(batch.price)
         amount_paise = int(amount * 100)
