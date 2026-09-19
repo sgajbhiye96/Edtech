@@ -2,7 +2,7 @@ import axios from "axios";
 const API = axios.create({
 baseURL:
 import.meta.env.VITE_API_URL ||
-"https://edtech-backend-f7p4.onrender.com/api",
+"https://jellyfish-app-6plcw.ondigitalocean.app/",
 timeout: 15000, // 15s timeout (Render free tier cold starts are slow)
 });
 // ── Attach token to every request ──
