@@ -2,10 +2,10 @@ from django.urls import path
 from .views import (
     CourseListView, CourseDetailView, CourseCreateView,
     BatchListView, BatchDetailView, BatchCreateView, AdminBatchListView, AdminBatchDetailView, AdminBatchStudentsView,
-    LiveClassListView, LiveClassCreateView, AdminLiveClassDetailView,
-    LearningResourceListView, LearningResourceCreateView, AdminLearningResourceDetailView,
-    AssignmentListView, AssignmentCreateView, AdminAssignmentDetailView,
-    ProjectListView, ProjectCreateView, AdminProjectDetailView,
+    LiveClassListView, LiveClassCreateView, AdminLiveClassListView, AdminLiveClassDetailView,
+    LearningResourceListView, LearningResourceCreateView, AdminLearningResourceListView, AdminLearningResourceDetailView,
+    AssignmentListView, AssignmentCreateView, AdminAssignmentListView, AdminAssignmentDetailView,
+    ProjectListView, ProjectCreateView, AdminProjectListView, AdminProjectDetailView,
 )
 
 urlpatterns = [
