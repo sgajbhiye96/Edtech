@@ -60,6 +60,7 @@ jobs:
           RAZORPAY_WEBHOOK_SECRET: webhook_test_secret
         run: |
           python manage.py check
+          python manage.py makemigrations --check --dry-run
           python manage.py migrate --noinput
           mysql -h 127.0.0.1 -u root -proot -e "GRANT ALL PRIVILEGES ON *.* TO 'edtech'@'%';"
           python manage.py test payments enrollments courses
