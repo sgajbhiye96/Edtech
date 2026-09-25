@@ -1,7 +1,11 @@
 import axios from "axios";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://jellyfish-app-6plcw.ondigitalocean.app/";
+
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "https://jellyfish-app-6plcw.ondigitalocean.app/",
+  baseURL: API_BASE_URL,
   timeout: 15000,
 });
 
@@ -19,7 +23,7 @@ API.interceptors.response.use(
       original._retry = true;
       try {
         const refreshRes = await axios.post(
-          `${import.meta.env.VITE_API_URL || "https://edtech-backend-f7p4.onrender.com/api"}/token/refresh/`,
+          `${API_BASE_URL}api/users/token/refresh/`,
           { refresh: localStorage.getItem("refresh") }
         );
         const newToken = refreshRes.data.access;
