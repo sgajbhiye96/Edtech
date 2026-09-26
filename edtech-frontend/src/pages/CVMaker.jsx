@@ -83,7 +83,10 @@ export default function CVMaker() {
       });
       razorpay.open();
     } catch (err) {
-      setError(err?.response?.data?.error || err?.message || "Unable to start subscription.");
+      console.error("CV subscription error:", err?.response?.data || err);
+      const serverError = err?.response?.data?.error;
+      const detail = err?.response?.data?.detail;
+      setError(serverError || detail || `CV subscription request failed (HTTP ${err?.response?.status || "unknown"}).`);
     }
   };
 
