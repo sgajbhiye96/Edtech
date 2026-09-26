@@ -45,6 +45,7 @@ INSTALLED_APPS = [
    'cloudinary_storage',
    'leads',
    'payments',
+   'cvbuilder',
 ]
 
 # ─── Middleware ───────────────────────────────────────────
@@ -172,6 +173,12 @@ USE_TZ = True
 
 # ─── Default PK ──────────────────────────────────────────
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ─── Razorpay ────────────────────────────────────────────
+RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "")
+RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET", "")
+RAZORPAY_WEBHOOK_SECRET = os.environ.get("RAZORPAY_WEBHOOK_SECRET", "")
+RAZORPAY_CV_PLAN_ID = os.environ.get("RAZORPAY_CV_PLAN_ID", "")
 
 # ─── Email ────────────────────────────────────────────────
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
