@@ -18,19 +18,38 @@ export default function SyllabusModal({ course, onClose }) {
     setLoading(true);
     setError("");
     try {
-      await API.post("/leads/", form);
-      if (course.syllabus) {
-        const link = document.createElement("a");
-        link.href = course.syllabus;
-        link.target = "_blank";
-        link.download = `${course.title}-syllabus.pdf`;
-        link.click();
-      } else {
-        alert("Syllabus not available yet!");
+      // Lead capture should never block the syllabus download.
+      try {
+        await API.post("/leads/", form);
+      } catch (leadError) {
+        console.error("Lead capture failed:", leadError?.response?.data || leadError);
       }
+
+      if (!course.syllabus) {
+        alert("Syllabus not available yet!");
+        return;
+      }
+
+      // Cloudinary ignores the HTML download attribute for cross-origin files.
+      // fl_attachment forces Cloudinary to return the PDF as a downloadable file.
+      const syllabusUrl = String(course.syllabus);
+      const downloadUrl = syllabusUrl.includes("/upload/")
+        ? syllabusUrl.replace("/upload/", "/upload/fl_attachment/")
+        : syllabusUrl;
+
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = `${course.title}-syllabus.pdf`;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
       onClose();
     } catch (err) {
-      setError("Something went wrong. Please try again.");
+      console.error("Syllabus download failed:", err);
+      setError("Unable to download the syllabus. Please try again.");
     } finally {
       setLoading(false);
     }
