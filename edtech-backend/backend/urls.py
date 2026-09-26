@@ -11,6 +11,7 @@ urlpatterns = [
     path('api/enrollments/', include('enrollments.urls')),
     path('api/leads/', include('leads.urls')),
     path('api/payments/', include('payments.urls')),
+    path('api/cv/', include('cvbuilder.urls')),
     
 ]
 
