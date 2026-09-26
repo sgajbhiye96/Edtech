@@ -10,6 +10,7 @@ import CourseDetails from "./pages/CourseDetails";
 import Dashboard from "./pages/Dashboard";
 import Home from "./pages/Home";
 import CVMaker from "./pages/CVMaker";
+import PracticeLab from "./pages/PracticeLab";
 import AdminLayout from "./admin/AdminLayout";
 import AdminLogin from "./admin/AdminLogin";
 import AdminDashboard from "./admin/Dashboard";
@@ -35,6 +36,7 @@ export default function App() {
           <Route path="/about" element={<About />} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/cv-maker" element={<CVMaker />} />
+          <Route path="/practice" element={<PracticeLab />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route path="dashboard" element={<AdminDashboard />} />
