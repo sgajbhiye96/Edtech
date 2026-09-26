@@ -66,6 +66,14 @@ class CVSubscriptionView(APIView):
             return Response({"active": False, "status": "NONE", "current_period_end": None})
 
     def post(self, request):
+        try:
+            return self._post(request)
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).exception("CV subscription creation failed")
+            return Response({"error": f"CV subscription server error: {exc}"}, status=500)
+
+    def _post(self, request):
         existing = getattr(request.user, "cv_subscription", None)
         if existing and existing.is_active():
             return Response({"active": True, "status": existing.status})
