@@ -45,6 +45,7 @@ INSTALLED_APPS = [
    'cloudinary_storage',
    'leads',
    'payments',
+   'cvbuilder',
 ]
 
 # ─── Middleware ───────────────────────────────────────────
