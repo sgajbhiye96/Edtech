@@ -51,7 +51,9 @@ export default function PaymentModal({ batch, onClose, onSuccess }) {
         handler: async (response) => {
           updateStep("verifying");
           try {
-            const verifyResponse = await API.post("/payments/verify/", response.data);
+            // Razorpay passes the payment response directly to the handler.
+            // Do not read response.data; that property does not exist here.
+            const verifyResponse = await API.post("/payments/verify/", response);
             if (verifyResponse.data.status === "SUCCESS") {
               updateStep("success");
               onSuccess?.(verifyResponse.data);
