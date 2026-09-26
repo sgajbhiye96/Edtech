@@ -95,7 +95,7 @@ export default function CourseDetails() {
         <img
           src={course.thumbnail}
           alt={course.title}
-          className="rounded-md mb-7 w-full object-cover max-h-64 md:max-h-96 border border-[#E4E0D2]"
+          className="premium-glow rounded-md mb-7 w-full object-cover max-h-64 md:max-h-96 border border-[#E4E0D2]"
         />
 
         <h1 className="font-['Sora',sans-serif] text-2xl md:text-4xl font-bold mb-4 text-[#12172B] tracking-tight">
@@ -144,14 +144,14 @@ export default function CourseDetails() {
           ) : (
             <button
               onClick={handleEnrollClick}
-              className="w-full sm:w-auto bg-[#F2A93B] text-[#12172B] px-6 py-3 rounded-[3px] hover:bg-[#F5BC63] font-bold transition-colors"
+              className="premium-button w-full sm:w-auto bg-[#F2A93B] text-[#12172B] px-6 py-3 rounded-[3px] hover:bg-[#F5BC63] font-bold transition-colors"
             >
               Enroll now
             </button>
           )}
           <button
             onClick={() => setShowModal(true)}
-            className="w-full sm:w-auto border-[1.5px] border-[#12172B] text-[#12172B] px-6 py-3 rounded-[3px] hover:bg-[#12172B] hover:text-white font-bold transition-colors"
+            className="premium-button w-full sm:w-auto border-[1.5px] border-[#12172B] text-[#12172B] px-6 py-3 rounded-[3px] hover:bg-[#12172B] hover:text-white font-bold transition-colors"
           >
             Download syllabus
           </button>
