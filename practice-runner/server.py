@@ -37,6 +37,24 @@ import json
 import time
 import traceback
 
+def normalize(value):
+    if isinstance(value, tuple):
+        return [normalize(v) for v in value]
+    if isinstance(value, list):
+        return [normalize(v) for v in value]
+    if isinstance(value, dict):
+        return {str(k): normalize(v) for k, v in value.items()}
+    return value
+
+def canonicalize(value, mode):
+    value = normalize(value)
+    if mode == 'anagrams' and isinstance(value, list):
+        return sorted(
+            [sorted(item) if isinstance(item, list) else item for item in value],
+            key=lambda x: json.dumps(x, sort_keys=True),
+        )
+    return value
+
 SOURCE = open('/workspace/submission.py', 'r', encoding='utf-8').read()
 namespace = {{}}
 exec(compile(SOURCE, '<submission>', 'exec'), namespace)
@@ -56,8 +74,8 @@ for index, case in enumerate(cases, start=1):
         actual = fn(*args, **kwargs)
         expected = case.get('expected')
         mode = case.get('sort_result')
-        actual_cmp = {__import__("builtins").__name__ and "canonicalize(actual, mode)"}
-        expected_cmp = {__import__("builtins").__name__ and "canonicalize(expected, mode)"}
+        actual_cmp = canonicalize(actual, mode)
+        expected_cmp = canonicalize(expected, mode)
         passed = actual_cmp == expected_cmp
         results.append({{
             'case': index,
