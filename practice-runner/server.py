@@ -1,3 +1,4 @@
+import hmac
 import json
 import os
 import subprocess
@@ -12,6 +13,7 @@ MAX_TESTS = 20
 CASE_TIMEOUT = 3
 TOTAL_TIMEOUT = 10
 PYTHON_IMAGE = os.environ.get("PRACTICE_PYTHON_IMAGE", "python:3.12-alpine")
+RUNNER_TOKEN = os.environ.get("PRACTICE_RUNNER_TOKEN", "")
 
 
 def normalize(value):
@@ -183,6 +185,11 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         if self.path != "/run":
             self._send(404, {"status": "ERROR", "message": "Not found."})
+            return
+
+        provided_token = self.headers.get("X-Practice-Runner-Token", "")
+        if not RUNNER_TOKEN or not hmac.compare_digest(provided_token, RUNNER_TOKEN):
+            self._send(401, {"status": "ERROR", "message": "Unauthorized."})
             return
 
         try:
