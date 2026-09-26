@@ -32,6 +32,37 @@ function Section({ title, value, onChange, placeholder, rows = 4 }) {
   );
 }
 
+async function downloadPDF() {
+  const element = document.getElementById("cv-preview");
+  if (!element) return;
+
+  if (!window.html2pdf) {
+    await new Promise((resolve, reject) => {
+      const existing = document.querySelector('script[data-html2pdf="true"]');
+      if (existing) {
+        existing.addEventListener("load", resolve, { once: true });
+        existing.addEventListener("error", reject, { once: true });
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+      script.async = true;
+      script.dataset.html2pdf = "true";
+      script.onload = resolve;
+      script.onerror = () => reject(new Error("PDF library could not be loaded."));
+      document.body.appendChild(script);
+    });
+  }
+
+  await window.html2pdf().set({
+    margin: [0.35, 0.35, 0.35, 0.35],
+    filename: "ATS-Resume.pdf",
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
+    jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
+    pagebreak: { mode: ["css", "legacy"] },
+  }).from(element).save();
+}
 export default function CVMaker() {
   const { user } = useContext(AuthContext);
   const [subscription, setSubscription] = useState(null);
@@ -138,7 +169,17 @@ export default function CVMaker() {
         </div>
         <div className="flex gap-2">
           <button onClick={saveResume} disabled={saving} className="rounded-md border border-[#12172B] px-4 py-2 text-sm font-semibold text-[#12172B]">{saving ? "Saving..." : "Save CV"}</button>
-          <button onClick={() => window.print()} className="rounded-md bg-[#F2A93B] px-4 py-2 text-sm font-bold text-[#12172B]">Download / Print PDF</button>
+          <button onClick={async () => {
+            setError("");
+            try {
+              await downloadPDF();
+              setMessage("PDF downloaded successfully.");
+            } catch (err) {
+              console.error("PDF download error:", err);
+              setError("Direct PDF download could not start. Please use Print → Save as PDF instead.");
+            }
+          }} className="rounded-md bg-[#F2A93B] px-4 py-2 text-sm font-bold text-[#12172B]">Download PDF</button>
+          <button onClick={() => window.print()} className="rounded-md border border-[#12172B] px-4 py-2 text-sm font-semibold text-[#12172B]">Print</button>
         </div>
       </div>
 
