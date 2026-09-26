@@ -4,6 +4,7 @@ import json
 from datetime import datetime
 
 import requests
+from requests import RequestException
 from django.conf import settings
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -78,10 +79,23 @@ class CVSubscriptionView(APIView):
             "customer_notify": 1,
             "notes": {"user_id": str(request.user.id), "product": "ATS CV Maker"},
         }
-        response = razorpay_request("POST", "/subscriptions", json=payload)
-        data = response.json()
+        try:
+            response = razorpay_request("POST", "/subscriptions", json=payload)
+        except RequestException as exc:
+            return Response({"error": f"Unable to reach Razorpay: {exc}"}, status=502)
+
+        try:
+            data = response.json()
+        except ValueError:
+            return Response({"error": f"Razorpay returned an unexpected response (HTTP {response.status_code})."}, status=502)
+
         if response.status_code >= 400:
-            return Response({"error": data.get("error", {}).get("description", "Unable to create subscription.")}, status=502)
+            error_data = data.get("error") or {}
+            description = error_data.get("description") or error_data.get("reason") or "Unable to create subscription."
+            return Response({"error": description}, status=502)
+
+        if not data.get("id"):
+            return Response({"error": "Razorpay did not return a subscription ID."}, status=502)
 
         subscription, _ = CVSubscription.objects.update_or_create(
             user=request.user,
@@ -118,6 +132,9 @@ class VerifyCVSubscriptionView(APIView):
         except CVSubscription.DoesNotExist:
             return Response({"error": "Subscription not found."}, status=404)
 
+        if not settings.RAZORPAY_KEY_SECRET:
+            return Response({"error": "Razorpay secret is not configured on the backend."}, status=503)
+
         expected = hmac.new(
             settings.RAZORPAY_KEY_SECRET.encode(),
             f"{subscription_id}|{payment_id}".encode(),
@@ -137,6 +154,8 @@ class CVSubscriptionWebhookView(APIView):
 
     def post(self, request):
         signature = request.headers.get("X-Razorpay-Signature", "")
+        if not settings.RAZORPAY_WEBHOOK_SECRET:
+            return Response({"error": "Razorpay webhook secret is not configured."}, status=503)
         expected = hmac.new(
             settings.RAZORPAY_WEBHOOK_SECRET.encode(),
             request.body,
