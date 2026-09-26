@@ -19,11 +19,10 @@ ALLOWED_HOSTS = os.environ.get(
    "ALLOWED_HOSTS", "localhost,127.0.0.1"
 ).split(",")
 
-# Razorpay credentials (load from environment; never commit secrets)
-RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "")
-RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET", "")
-RAZORPAY_WEBHOOK_SECRET = os.environ.get("RAZORPAY_WEBHOOK_SECRET", "")
-RAZORPAY_CV_PLAN_ID = os.environ.get("RAZORPAY_CV_PLAN_ID", "")
+# Cashfree credentials (load from environment)
+CASHFREE_APP_ID    = os.environ.get("CASHFREE_APP_ID", "")
+CASHFREE_SECRET_KEY = os.environ.get("CASHFREE_SECRET_KEY", "")
+CASHFREE_ENV       = os.environ.get("CASHFREE_ENV", "sandbox")  # sandbox | production
 
 # ─── Applications ─────────────────────────────────────────
 INSTALLED_APPS = [
@@ -46,7 +45,6 @@ INSTALLED_APPS = [
    'cloudinary_storage',
    'leads',
    'payments',
-   'cvbuilder',
 ]
 
 # ─── Middleware ───────────────────────────────────────────
@@ -156,10 +154,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ─── Email ────────────────────────────────────────────────
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtpout.secureserver.net')
-EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
-EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL') or EMAIL_HOST_USER
+DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_HOST_USER')
 ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL')
