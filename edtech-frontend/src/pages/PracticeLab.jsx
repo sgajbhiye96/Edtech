@@ -4,12 +4,12 @@ import API from "../services/api";
 const PROBLEMS = [
   { id: 1, category: "Python", difficulty: "Easy", title: "Two Sum", prompt: "Given a list of integers and a target, return the indices of two numbers whose sum equals the target.", starter: "def two_sum(nums, target):\n    # write your solution\n    pass", solution: "Use a hash map to store each number's index while scanning the list once." },
   { id: 2, category: "Python", difficulty: "Easy", title: "First Non-Repeating Character", prompt: "Return the first character in a string that occurs exactly once.", starter: "def first_unique(s):\n    pass", solution: "Count characters first, then scan the string again and return the first character with count 1." },
-  { id: 3, category: "Python", difficulty: "Medium", title: "Group Anagrams", prompt: "Group words that are anagrams of one another.", starter: "def group_anagrams(words):\n    pass", solution: "Use a sorted-word or 26-character frequency tuple as the dictionary key." },
+  { id: 3, category: "Python", difficulty: "Medium", title: "Group Anagrams", prompt: "Group words that are anagrams of one another.", starter: "def group_anagrams(words):\n    pass", solution: "Use a sorted-word or frequency tuple as the dictionary key." },
   { id: 4, category: "Python", difficulty: "Medium", title: "Sliding Window Maximum", prompt: "Find the maximum value in every window of size k.", starter: "from collections import deque\n\ndef max_window(nums, k):\n    pass", solution: "Use a monotonic deque to maintain candidate indices in decreasing value order." },
   { id: 5, category: "Machine Learning", difficulty: "Easy", title: "Train/Test Split", prompt: "Why should a model be evaluated on data that was not used during training?", starter: "Your answer:\n", solution: "To estimate how well the trained model generalizes to unseen data." },
-  { id: 6, category: "Machine Learning", difficulty: "Easy", title: "Precision vs Recall", prompt: "For a fraud detection system where missing fraud is very costly, which metric should receive strong attention and why?", starter: "Your answer:\n", solution: "Recall, because it measures how many of the actual positive fraud cases were detected." },
+  { id: 6, category: "Machine Learning", difficulty: "Easy", title: "Precision vs Recall", prompt: "For a fraud detection system where missing fraud is very costly, which metric should receive strong attention and why?", starter: "Your answer:\n", solution: "Recall measures how many actual positive fraud cases were detected." },
   { id: 7, category: "Machine Learning", difficulty: "Medium", title: "Feature Scaling", prompt: "When is standardization especially useful for machine learning models?", starter: "Your answer:\n", solution: "It is useful for scale-sensitive algorithms such as logistic regression, SVM, k-nearest neighbors and neural networks." },
-  { id: 8, category: "Machine Learning", difficulty: "Medium", title: "Overfitting", prompt: "Name two practical techniques to reduce overfitting.", starter: "Your answer:\n", solution: "Examples include cross-validation, regularization, dropout, early stopping, reducing model complexity and collecting more data." },
+  { id: 8, category: "Machine Learning", difficulty: "Medium", title: "Overfitting", prompt: "Name two practical techniques to reduce overfitting.", starter: "Your answer:\n", solution: "Examples include cross-validation, regularization, dropout, early stopping and reducing model complexity." },
   { id: 9, category: "MySQL", difficulty: "Easy", title: "Second Highest Salary", prompt: "Write a query to return the second highest distinct salary from employees.", starter: "SELECT ...", solution: "SELECT MAX(salary) FROM employees WHERE salary < (SELECT MAX(salary) FROM employees);" },
   { id: 10, category: "MySQL", difficulty: "Easy", title: "Department Counts", prompt: "Return each department and the number of employees in it.", starter: "SELECT ...", solution: "SELECT department_id, COUNT(*) FROM employees GROUP BY department_id;" },
   { id: 11, category: "MySQL", difficulty: "Medium", title: "Top Earners", prompt: "Return employees whose salary is greater than the average salary of all employees.", starter: "SELECT ...", solution: "SELECT * FROM employees WHERE salary > (SELECT AVG(salary) FROM employees);" },
@@ -22,12 +22,20 @@ const PROBLEMS = [
 
 const CATEGORIES = ["All", "Python", "Machine Learning", "MySQL", "Excel"];
 
+function languageFor(category) {
+  if (category === "Python" || category === "Machine Learning") return "Python";
+  if (category === "MySQL") return "SQL";
+  if (category === "Excel") return "Excel";
+  return "Text";
+}
+
 export default function PracticeLab() {
   const [category, setCategory] = useState("All");
   const [selectedId, setSelectedId] = useState(1);
   const [answer, setAnswer] = useState("");
   const [showSolution, setShowSolution] = useState(false);
   const [message, setMessage] = useState("");
+  const [runState, setRunState] = useState("idle");
   const [completed, setCompleted] = useState(() => JSON.parse(localStorage.getItem("practice_completed") || "[]"));
   const [profile, setProfile] = useState({ xp: 0, solved_count: 0, current_streak: 0 });
 
@@ -40,12 +48,14 @@ export default function PracticeLab() {
     [category]
   );
   const problem = PROBLEMS.find((p) => p.id === selectedId) || filtered[0];
+  const language = languageFor(problem.category);
 
   const selectProblem = (id) => {
     setSelectedId(id);
     setAnswer("");
     setMessage("");
     setShowSolution(false);
+    setRunState("idle");
   };
 
   const submit = async () => {
@@ -53,6 +63,7 @@ export default function PracticeLab() {
       setMessage("Write an answer before submitting.");
       return;
     }
+    setRunState("submitting");
     try {
       const res = await API.post("/practice/attempts/", { problem: problem.id, answer });
       setProfile(res.data.profile || profile);
@@ -60,9 +71,13 @@ export default function PracticeLab() {
         const next = [...new Set([...completed, problem.id])];
         setCompleted(next);
         localStorage.setItem("practice_completed", JSON.stringify(next));
+        setRunState("passed");
+      } else {
+        setRunState("submitted");
       }
       setMessage(res.data.message || "Submission recorded.");
     } catch (err) {
+      setRunState("error");
       setMessage(err?.response?.data?.detail || "Unable to submit. Please login again and retry.");
     }
   };
@@ -74,72 +89,120 @@ export default function PracticeLab() {
   };
 
   return (
-    <main className="min-h-screen bg-[#F6F4ED] text-[#12172B] font-['Inter',sans-serif]">
-      <section className="max-w-[1400px] mx-auto px-4 md:px-6 py-8">
-        <div className="mb-7">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F2A93B]/15 text-[#8A5B12] text-xs font-bold uppercase tracking-wider">Practice Lab</div>
-          <h1 className="font-['Sora',sans-serif] text-3xl md:text-4xl font-extrabold mt-3">Practice. Build. Get job-ready.</h1>
-          <p className="text-[#5C6380] mt-2 max-w-2xl">LeetCode-style practice for Python, Machine Learning, MySQL and Excel — built for Innovation AI Labs learners.</p>
-        </div>
+    <main className="min-h-screen bg-[#0B1020] text-white font-['Inter',sans-serif]">
+      <section className="max-w-[1500px] mx-auto px-3 md:px-5 py-5">
+        <header className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-5">
+          <div>
+            <div className="text-xs font-bold uppercase tracking-[0.2em] text-[#F2A93B]">Innovation AI Labs • Practice Arena</div>
+            <h1 className="font-['Sora',sans-serif] text-2xl md:text-3xl font-extrabold mt-2">Practice like a developer. Learn by solving.</h1>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <span className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm">⚡ {profile.xp} XP</span>
+            <span className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm">🔥 {profile.current_streak} day streak</span>
+            <span className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm">✓ {profile.solved_count} solved</span>
+          </div>
+        </header>
 
-        <div className="flex flex-wrap gap-3 mb-6">
-          <div className="px-4 py-2 rounded-full bg-white border border-[#E4E0D2] text-sm font-semibold">XP: {profile.xp}</div>
-          <div className="px-4 py-2 rounded-full bg-white border border-[#E4E0D2] text-sm font-semibold">Streak: {profile.current_streak} 🔥</div>
-          <div className="px-4 py-2 rounded-full bg-white border border-[#E4E0D2] text-sm font-semibold">Solved: {profile.solved_count}</div>
+        <div className="flex gap-2 overflow-x-auto pb-3">
           {CATEGORIES.map((item) => (
-            <button key={item} onClick={() => selectCategory(item)} className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all ${category === item ? "bg-[#12172B] text-white border-[#12172B]" : "bg-white border-[#E4E0D2] hover:-translate-y-0.5"}`}>
+            <button key={item} onClick={() => selectCategory(item)} className={`shrink-0 px-4 py-2 rounded-lg text-sm font-semibold border transition-all ${category === item ? "bg-[#F2A93B] text-[#111827] border-[#F2A93B]" : "bg-white/5 border-white/10 text-white/80 hover:bg-white/10"}`}>
               {item}
             </button>
           ))}
         </div>
 
-        <div className="grid lg:grid-cols-[300px_1fr] gap-5">
-          <aside className="bg-white border border-[#E4E0D2] rounded-xl p-3 h-fit lg:sticky lg:top-24">
-            <div className="flex items-center justify-between px-2 pb-3 border-b border-[#E4E0D2]">
+        <div className="grid xl:grid-cols-[280px_minmax(0,1fr)] gap-4">
+          <aside className="rounded-xl border border-white/10 bg-[#11182B] overflow-hidden">
+            <div className="p-4 border-b border-white/10 flex items-center justify-between">
               <span className="font-bold">Problems</span>
-              <span className="text-xs text-[#5C6380]">{completed.length}/{PROBLEMS.length} solved</span>
+              <span className="text-xs text-white/50">{completed.length}/{PROBLEMS.length}</span>
             </div>
-            <div className="mt-2 space-y-1 max-h-[520px] overflow-auto">
+            <div className="p-2 max-h-[650px] overflow-auto">
               {filtered.map((item) => (
-                <button key={item.id} onClick={() => selectProblem(item.id)} className={`w-full text-left p-3 rounded-lg transition-all ${problem.id === item.id ? "bg-[#F2A93B]/15 border border-[#F2A93B]/40" : "hover:bg-[#F6F4ED]"}`}>
+                <button key={item.id} onClick={() => selectProblem(item.id)} className={`w-full text-left p-3 rounded-lg mb-1 transition-all ${problem.id === item.id ? "bg-[#F2A93B]/15 ring-1 ring-[#F2A93B]/40" : "hover:bg-white/5"}`}>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-[#7A8098]">{item.id}.</span>
-                    <span className="font-semibold text-sm flex-1">{item.title}</span>
-                    {completed.includes(item.id) && <span className="text-green-600 text-sm">✓</span>}
+                    <span className="text-xs text-white/35 w-5">{item.id}</span>
+                    <span className="text-sm font-semibold flex-1">{item.title}</span>
+                    {completed.includes(item.id) && <span className="text-emerald-400">✓</span>}
                   </div>
-                  <div className="mt-1 ml-5 text-[11px] text-[#7A8098]">{item.difficulty}</div>
+                  <div className="ml-7 mt-1 text-[11px] text-white/40">{item.category} • {item.difficulty}</div>
                 </button>
               ))}
             </div>
           </aside>
 
-          <section className="bg-white border border-[#E4E0D2] rounded-xl overflow-hidden">
-            <div className="p-5 md:p-7 border-b border-[#E4E0D2]">
-              <div className="flex flex-wrap items-center gap-2 mb-3">
-                <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-[#12172B] text-white">{problem.category}</span>
-                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#F6F4ED]">{problem.difficulty}</span>
+          <section className="grid lg:grid-cols-2 gap-4 min-w-0">
+            <div className="rounded-xl border border-white/10 bg-[#11182B] overflow-hidden">
+              <div className="p-5 border-b border-white/10">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xs font-bold px-2 py-1 rounded bg-white/10">{problem.category}</span>
+                  <span className="text-xs font-semibold px-2 py-1 rounded bg-[#F2A93B]/15 text-[#F2A93B]">{problem.difficulty}</span>
+                  <span className="ml-auto text-xs text-white/40">{problem.id}/16</span>
+                </div>
+                <h2 className="font-['Sora',sans-serif] text-xl font-bold">{problem.title}</h2>
+                <p className="mt-3 text-sm leading-6 text-white/65">{problem.prompt}</p>
               </div>
-              <h2 className="font-['Sora',sans-serif] text-2xl font-bold">{problem.title}</h2>
-              <p className="mt-3 text-[#4E5572] leading-7">{problem.prompt}</p>
+              <div className="p-5">
+                <div className="text-xs uppercase tracking-wider text-white/40 mb-2">Instructions</div>
+                <div className="rounded-lg bg-[#0B1020] border border-white/10 p-4 text-sm text-white/70 leading-6">
+                  {problem.category === "Python" && "Implement the function using Python. Your submission will be evaluated by the practice engine when execution is enabled."}
+                  {problem.category === "Machine Learning" && "Explain your reasoning clearly. ML execution and dataset-based evaluation will be added in the sandbox phase."}
+                  {problem.category === "MySQL" && "Write a valid SQL query. It will run against an isolated practice schema in the SQL engine phase."}
+                  {problem.category === "Excel" && "Provide the formula or method. Workbook-based validation will be added in the Excel phase."}
+                </div>
+                <button onClick={() => setShowSolution(!showSolution)} className="mt-4 text-sm font-semibold text-[#F2A93B] hover:underline">
+                  {showSolution ? "Hide solution" : "View solution"}
+                </button>
+                {showSolution && <div className="mt-3 rounded-lg border border-white/10 bg-white/5 p-4 text-sm text-white/70 whitespace-pre-wrap">{problem.solution}</div>}
+              </div>
             </div>
 
-            <div className="p-5 md:p-7">
-              <label className="block text-sm font-bold mb-2">Your solution</label>
-              <textarea value={answer || problem.starter} onChange={(e) => setAnswer(e.target.value)} className="w-full min-h-[260px] rounded-lg border border-[#D8D5CA] bg-[#101522] text-[#F6F4ED] p-4 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-[#F2A93B]" spellCheck="false" />
-              <div className="flex flex-wrap gap-3 mt-4">
-                <button onClick={submit} className="px-5 py-2.5 rounded-lg bg-[#F2A93B] text-[#12172B] font-bold hover:-translate-y-0.5 transition-all">Submit</button>
-                <button onClick={() => setShowSolution(!showSolution)} className="px-5 py-2.5 rounded-lg border border-[#12172B]/20 font-semibold hover:bg-[#F6F4ED] transition-all">{showSolution ? "Hide solution" : "View solution"}</button>
+            <div className="rounded-xl border border-white/10 bg-[#11182B] overflow-hidden flex flex-col min-h-[560px]">
+              <div className="h-12 px-4 border-b border-white/10 flex items-center gap-3">
+                <span className="text-xs font-bold text-white/60">EDITOR</span>
+                <span className="text-xs rounded px-2 py-1 bg-white/5 text-white/50">{language}</span>
+                <span className="ml-auto text-xs text-white/35">Sandbox execution coming next</span>
               </div>
-              {message && <p className="mt-4 text-sm font-semibold text-[#49634D]">{message}</p>}
-              {showSolution && (
-                <div className="mt-5 p-4 rounded-lg bg-[#F6F4ED] border border-[#E4E0D2]">
-                  <div className="text-xs font-bold uppercase tracking-wider text-[#8A5B12] mb-2">Solution approach</div>
-                  <p className="text-sm text-[#3F4662] whitespace-pre-wrap">{problem.solution}</p>
-                </div>
-              )}
+              <textarea
+                value={answer || problem.starter}
+                onChange={(e) => setAnswer(e.target.value)}
+                className="flex-1 min-h-[390px] w-full resize-none bg-[#080C16] text-[#E7EAF1] p-5 font-mono text-sm leading-6 outline-none border-0"
+                spellCheck="false"
+                placeholder="Write your solution here..."
+              />
+              <div className="p-3 border-t border-white/10 bg-[#0D1424] flex flex-wrap gap-2 items-center">
+                <button onClick={() => { setRunState("queued"); setMessage("Execution is not enabled yet. Your code is kept locally until the secure sandbox is connected."); }} className="px-4 py-2 rounded-lg border border-white/10 text-sm font-semibold hover:bg-white/5">
+                  ▶ Run
+                </button>
+                <button onClick={submit} disabled={runState === "submitting"} className="px-5 py-2 rounded-lg bg-[#F2A93B] text-[#111827] text-sm font-bold disabled:opacity-50">
+                  {runState === "submitting" ? "Submitting..." : "Submit"}
+                </button>
+                {message && <span className={`text-xs ${runState === "error" ? "text-red-300" : runState === "passed" ? "text-emerald-300" : "text-white/55"}`}>{message}</span>}
+              </div>
             </div>
           </section>
         </div>
+
+        <section className="mt-4 rounded-xl border border-white/10 bg-[#11182B]">
+          <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
+            <h3 className="font-bold">Test Results</h3>
+            <span className="text-xs text-white/40">Execution result</span>
+          </div>
+          <div className="p-5 grid md:grid-cols-3 gap-3">
+            <div className="rounded-lg bg-[#0B1020] border border-white/10 p-4">
+              <div className="text-xs text-white/40">Status</div>
+              <div className="mt-1 font-bold">{runState === "passed" ? "Accepted" : runState === "error" ? "Error" : "Not run"}</div>
+            </div>
+            <div className="rounded-lg bg-[#0B1020] border border-white/10 p-4">
+              <div className="text-xs text-white/40">Tests</div>
+              <div className="mt-1 font-bold">{runState === "passed" ? "All tests passed" : "—"}</div>
+            </div>
+            <div className="rounded-lg bg-[#0B1020] border border-white/10 p-4">
+              <div className="text-xs text-white/40">Runtime</div>
+              <div className="mt-1 font-bold">—</div>
+            </div>
+          </div>
+        </section>
       </section>
     </main>
   );
