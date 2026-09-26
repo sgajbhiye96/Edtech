@@ -109,7 +109,7 @@ export default function Courses() {
                     className="w-full h-[180px] object-cover block"
                   />
                   {c.category && (
-                    <span className="absolute top-3 left-3 bg-[#12172B]/90 text-white text-[0.72rem] font-semibold px-2.5 py-1 rounded-full uppercase tracking-wide">
+                    <span className="premium-badge absolute top-3 left-3 bg-[#12172B]/90 text-white text-[0.72rem] font-semibold px-2.5 py-1 rounded-full uppercase tracking-wide">
                       {c.category}
                     </span>
                   )}
@@ -130,7 +130,7 @@ export default function Courses() {
                     </div>
                     <Link
                       to={`/courses/${c.id}`}
-                      className="bg-[#F2A93B] text-[#12172B] px-4 py-2 rounded-[3px] text-[0.85rem] font-bold whitespace-nowrap hover:bg-[#F5BC63] transition-colors"
+                      className="premium-button bg-[#F2A93B] text-[#12172B] px-4 py-2 rounded-[3px] text-[0.85rem] font-bold whitespace-nowrap hover:bg-[#F5BC63] transition-colors"
                     >
                       View
                     </Link>
