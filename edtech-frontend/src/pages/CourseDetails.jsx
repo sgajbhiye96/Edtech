@@ -80,7 +80,7 @@ export default function CourseDetails() {
 
   return (
     <div className="bg-[#F6F4ED] min-h-screen font-['Inter',sans-serif]">
-      <div className="max-w-4xl mx-auto px-4 md:px-6 py-8 md:py-12">
+      <div className="max-w-4xl mx-auto px-4 md:px-6 py-8 md:py-12 animate-page-in">
         {showModal && (
           <SyllabusModal course={course} onClose={() => setShowModal(false)} />
         )}
