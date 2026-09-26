@@ -12,6 +12,7 @@ urlpatterns = [
     path('api/leads/', include('leads.urls')),
     path('api/payments/', include('payments.urls')),
     path('api/cv/', include('cvbuilder.urls')),
+    path('api/practice/', include('practice.urls')),
     
 ]
 
