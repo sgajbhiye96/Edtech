@@ -18,7 +18,14 @@ export default function SyllabusModal({ course, onClose }) {
     setLoading(true);
     setError("");
     try {
-      await API.post("/leads/", form);
+      let leadCaptured = true;
+      try {
+        await API.post("/leads/", form);
+      } catch (leadError) {
+        leadCaptured = false;
+        console.error("Lead capture failed:", leadError?.response?.data || leadError);
+      }
+
       if (course.syllabus) {
         try {
           const response = await fetch(course.syllabus);
@@ -39,9 +46,12 @@ export default function SyllabusModal({ course, onClose }) {
       } else {
         alert("Syllabus not available yet!");
       }
+
+      if (!leadCaptured) {
+        setError("Syllabus downloaded, but your details could not be submitted. Please try again.");
+        return;
+      }
       onClose();
-    } catch (err) {
-      setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
