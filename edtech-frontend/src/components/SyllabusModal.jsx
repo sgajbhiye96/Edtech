@@ -37,14 +37,10 @@ export default function SyllabusModal({ course, onClose }) {
         ? syllabusUrl.replace("/upload/", "/upload/fl_attachment/")
         : syllabusUrl;
 
-      const link = document.createElement("a");
-      link.href = downloadUrl;
-      link.download = `${course.title}-syllabus.pdf`;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+      // Let Cloudinary's fl_attachment response perform the actual download.
+      // Using an anchor with download does not reliably work for cross-origin
+      // Cloudinary raw files because the browser controls the download attribute.
+      window.location.assign(downloadUrl);
 
       onClose();
     } catch (err) {
