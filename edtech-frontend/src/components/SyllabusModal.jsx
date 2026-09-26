@@ -30,17 +30,11 @@ export default function SyllabusModal({ course, onClose }) {
         return;
       }
 
-      // Cloudinary ignores the HTML download attribute for cross-origin files.
-      // fl_attachment forces Cloudinary to return the PDF as a downloadable file.
+      // Use the exact Cloudinary delivery URL returned by the API.
+      // Do not inject fl_attachment into raw-file URLs because some Cloudinary
+      // raw deliveries reject that transformation with ERR_INVALID_RESPONSE.
       const syllabusUrl = String(course.syllabus);
-      const downloadUrl = syllabusUrl.includes("/upload/")
-        ? syllabusUrl.replace("/upload/", "/upload/fl_attachment/")
-        : syllabusUrl;
-
-      // Let Cloudinary's fl_attachment response perform the actual download.
-      // Using an anchor with download does not reliably work for cross-origin
-      // Cloudinary raw files because the browser controls the download attribute.
-      window.location.assign(downloadUrl);
+      window.open(syllabusUrl, "_blank", "noopener,noreferrer");
 
       onClose();
     } catch (err) {
