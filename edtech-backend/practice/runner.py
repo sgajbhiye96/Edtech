@@ -3,6 +3,7 @@ import requests
 
 RUNNER_URL = os.environ.get("PRACTICE_RUNNER_URL", "").rstrip("/")
 RUNNER_TIMEOUT = float(os.environ.get("PRACTICE_RUNNER_TIMEOUT", "15"))
+RUNNER_TOKEN = os.environ.get("PRACTICE_RUNNER_TOKEN", "")
 
 
 class RunnerUnavailable(Exception):
@@ -10,12 +11,13 @@ class RunnerUnavailable(Exception):
 
 
 def run_python(*, code, function_name, test_cases):
-    if not RUNNER_URL:
+    if not RUNNER_URL or not RUNNER_TOKEN:
         raise RunnerUnavailable("Practice runner is not configured.")
 
     try:
         response = requests.post(
             f"{RUNNER_URL}/run",
+            headers={"X-Practice-Runner-Token": RUNNER_TOKEN},
             json={
                 "language": "python",
                 "code": code,
