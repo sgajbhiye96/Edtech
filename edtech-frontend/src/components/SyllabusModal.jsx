@@ -20,11 +20,22 @@ export default function SyllabusModal({ course, onClose }) {
     try {
       await API.post("/leads/", form);
       if (course.syllabus) {
-        const link = document.createElement("a");
-        link.href = course.syllabus;
-        link.target = "_blank";
-        link.download = `${course.title}-syllabus.pdf`;
-        link.click();
+        try {
+          const response = await fetch(course.syllabus);
+          if (!response.ok) throw new Error("Unable to fetch syllabus");
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = course.title + "-syllabus.pdf";
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          window.URL.revokeObjectURL(url);
+        } catch (downloadError) {
+          console.warn("Direct syllabus download failed:", downloadError);
+          window.open(course.syllabus, "_blank", "noopener,noreferrer");
+        }
       } else {
         alert("Syllabus not available yet!");
       }
