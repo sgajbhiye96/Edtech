@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import API from "../services/api";
 
 const PROBLEMS = [
@@ -30,6 +30,10 @@ export default function PracticeLab() {
   const [message, setMessage] = useState("");
   const [completed, setCompleted] = useState(() => JSON.parse(localStorage.getItem("practice_completed") || "[]"));
   const [profile, setProfile] = useState({ xp: 0, solved_count: 0, current_streak: 0 });
+
+  useEffect(() => {
+    API.get("/practice/profile/").then((res) => setProfile(res.data)).catch(() => {});
+  }, []);
 
   const filtered = useMemo(
     () => category === "All" ? PROBLEMS : PROBLEMS.filter((p) => p.category === category),
