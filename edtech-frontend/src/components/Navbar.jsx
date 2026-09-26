@@ -12,6 +12,7 @@ export default function Navbar() {
     { to: "/courses", label: "Courses" },
     { to: "/about", label: "About Us" },
     { to: "/cv-maker", label: "ATS CV Maker" },
+    { to: "/practice", label: "Practice Lab" },
   ];
 
   const isActive = (path) =>
