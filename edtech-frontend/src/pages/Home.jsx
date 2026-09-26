@@ -21,13 +21,13 @@ export default function Home() {
           <div className="mt-9 flex flex-wrap gap-4">
             <Link
               to="/courses"
-              className="bg-[#12172B] text-white font-bold text-[15.5px] px-7 py-[15px] rounded-[3px] hover:bg-[#232A4A] transition-colors"
+              className="premium-button bg-[#12172B] text-white font-bold text-[15.5px] px-7 py-[15px] rounded-[3px] hover:bg-[#232A4A] transition-colors"
             >
               Explore courses
             </Link>
             <Link
               to="/about"
-              className="border-[1.5px] border-[#12172B] font-bold text-[15.5px] px-7 py-[15px] rounded-[3px] hover:bg-[#12172B] hover:text-white transition-colors"
+              className="premium-button border-[1.5px] border-[#12172B] font-bold text-[15.5px] px-7 py-[15px] rounded-[3px] hover:bg-[#12172B] hover:text-white transition-colors"
             >
               Talk to a mentor
             </Link>
@@ -130,7 +130,7 @@ export default function Home() {
         </p>
         <Link
           to="/courses"
-          className="inline-block mt-7 bg-[#F2A93B] text-[#12172B] font-bold text-[15px] px-6 py-[11px] rounded-[3px] hover:bg-[#F5BC63] transition-colors"
+          className="premium-button inline-block mt-7 bg-[#F2A93B] text-[#12172B] font-bold text-[15px] px-6 py-[11px] rounded-[3px] hover:bg-[#F5BC63] transition-colors"
         >
           See how it works
         </Link>
