@@ -46,6 +46,7 @@ INSTALLED_APPS = [
    'leads',
    'payments',
    'cvbuilder',
+   'practice',
 ]
 
 # ─── Middleware ───────────────────────────────────────────
