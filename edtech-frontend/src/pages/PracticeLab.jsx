@@ -29,6 +29,7 @@ export default function PracticeLab() {
   const [showSolution, setShowSolution] = useState(false);
   const [message, setMessage] = useState("");
   const [completed, setCompleted] = useState(() => JSON.parse(localStorage.getItem("practice_completed") || "[]"));
+  const [profile, setProfile] = useState({ xp: 0, solved_count: 0, current_streak: 0 });
 
   const filtered = useMemo(
     () => category === "All" ? PROBLEMS : PROBLEMS.filter((p) => p.category === category),
@@ -43,15 +44,23 @@ export default function PracticeLab() {
     setShowSolution(false);
   };
 
-  const submit = () => {
+  const submit = async () => {
     if (!answer.trim()) {
       setMessage("Write an answer before submitting.");
       return;
     }
-    const next = [...new Set([...completed, problem.id])];
-    setCompleted(next);
-    localStorage.setItem("practice_completed", JSON.stringify(next));
-    setMessage("Answer submitted. Keep practicing — review the solution below when needed.");
+    try {
+      const res = await API.post("/practice/attempts/", { problem: problem.id, answer });
+      setProfile(res.data.profile || profile);
+      if (res.data.attempt?.status === "PASSED") {
+        const next = [...new Set([...completed, problem.id])];
+        setCompleted(next);
+        localStorage.setItem("practice_completed", JSON.stringify(next));
+      }
+      setMessage(res.data.message || "Submission recorded.");
+    } catch (err) {
+      setMessage(err?.response?.data?.detail || "Unable to submit. Please login again and retry.");
+    }
   };
 
   const selectCategory = (value) => {
@@ -69,7 +78,10 @@ export default function PracticeLab() {
           <p className="text-[#5C6380] mt-2 max-w-2xl">LeetCode-style practice for Python, Machine Learning, MySQL and Excel — built for Innovation AI Labs learners.</p>
         </div>
 
-        <div className="flex flex-wrap gap-2 mb-6">
+        <div className="flex flex-wrap gap-3 mb-6">
+          <div className="px-4 py-2 rounded-full bg-white border border-[#E4E0D2] text-sm font-semibold">XP: {profile.xp}</div>
+          <div className="px-4 py-2 rounded-full bg-white border border-[#E4E0D2] text-sm font-semibold">Streak: {profile.current_streak} 🔥</div>
+          <div className="px-4 py-2 rounded-full bg-white border border-[#E4E0D2] text-sm font-semibold">Solved: {profile.solved_count}</div>
           {CATEGORIES.map((item) => (
             <button key={item} onClick={() => selectCategory(item)} className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all ${category === item ? "bg-[#12172B] text-white border-[#12172B]" : "bg-white border-[#E4E0D2] hover:-translate-y-0.5"}`}>
               {item}
