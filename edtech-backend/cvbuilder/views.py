@@ -23,7 +23,7 @@ def razorpay_request(method, path, **kwargs):
         method,
         f"{RAZORPAY_BASE_URL}{path}",
         auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET),
-        timeout=15,
+        timeout=(5, 8),
         **kwargs,
     )
 
