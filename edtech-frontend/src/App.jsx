@@ -36,7 +36,7 @@ export default function App() {
           <Route path="/about" element={<About />} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/cv-maker" element={<CVMaker />} />
-          <Route path="/practice" element={<PracticeLab />} />
+          <Route path="/practice" element={<ProtectedRoute><PracticeLab /></ProtectedRoute>} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route path="dashboard" element={<AdminDashboard />} />
