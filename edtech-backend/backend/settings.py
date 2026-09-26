@@ -120,13 +120,23 @@ SIMPLE_JWT = {
 }
 
 # ─── CORS / CSRF ──────────────────────────────────────────
-CORS_ALLOWED_ORIGINS = os.environ.get(
-   "CORS_ALLOWED_ORIGINS", "http://localhost:3000"
-).split(",")
+CORS_ALLOWED_ORIGINS = [
+   origin.strip()
+   for origin in os.environ.get(
+       "CORS_ALLOWED_ORIGINS",
+       "http://localhost:3000,https://innovationailabs.in,https://www.innovationailabs.in",
+   ).split(",")
+   if origin.strip()
+]
 CORS_ALLOW_CREDENTIALS = True
-CSRF_TRUSTED_ORIGINS = os.environ.get(
-   "CSRF_TRUSTED_ORIGINS", "http://localhost:3000"
-).split(",")
+CSRF_TRUSTED_ORIGINS = [
+   origin.strip()
+   for origin in os.environ.get(
+       "CSRF_TRUSTED_ORIGINS",
+       "http://localhost:3000,https://innovationailabs.in,https://www.innovationailabs.in",
+   ).split(",")
+   if origin.strip()
+]
 
 # ─── Static Files ─────────────────────────────────────────
 STATIC_URL = '/static/'
