@@ -180,6 +180,7 @@ RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "")
 RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET", "")
 RAZORPAY_WEBHOOK_SECRET = os.environ.get("RAZORPAY_WEBHOOK_SECRET", "")
 RAZORPAY_CV_PLAN_ID = os.environ.get("RAZORPAY_CV_PLAN_ID", "")
+GENAI_AGENTIC_PRICE = os.environ.get("GENAI_AGENTIC_PRICE", "4999.00")
 
 # ─── Email ────────────────────────────────────────────────
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
