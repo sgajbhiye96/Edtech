@@ -14,6 +14,7 @@ class Payment(models.Model):
 
     PROVIDER_CHOICES = [
         ("RAZORPAY", "Razorpay"),
+        ("UPI_QR", "UPI QR"),
     ]
 
     user = models.ForeignKey(
