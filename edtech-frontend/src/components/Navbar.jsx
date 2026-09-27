@@ -10,6 +10,7 @@ export default function Navbar() {
   const navLinks = [
     { to: "/", label: "Home" },
     { to: "/courses", label: "Courses" },
+    { to: "/generative-ai-agentic-ai", label: "GenAI + Agentic AI" },
     { to: "/about", label: "About Us" },
     { to: "/cv-maker", label: "ATS CV Maker" },
     { to: "/practice", label: "Practice Lab" },
