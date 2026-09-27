@@ -17,7 +17,7 @@ function loadRazorpay() {
 export default function PaymentModal({ batch, onClose, onSuccess }) {
   const [step, setStep] = useState("creating");
   const [error, setError] = useState("");
-  const [displayAmount, setDisplayAmount] = useState(Number(batch.price || 0);
+  const [displayAmount, setDisplayAmount] = useState(Number(batch.price || 0));
   const stepRef = useRef("creating");
 
   useEffect(() => { startPayment(); }, []);
