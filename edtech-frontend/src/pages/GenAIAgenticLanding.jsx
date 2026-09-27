@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import API from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 import PaymentModal from "../components/PaymentModal";
+import upiQr from "../assets/siddharth-upi-qr.svg";
 
 const modules = [
   ["01", "Python for GenAI", "Python foundations, APIs, JSON, Git and the tooling used to build AI applications."],
@@ -203,7 +204,47 @@ export default function GenAIAgenticLanding() {
                   </div>
                 ))}
               </div>
-              <button onClick={handleEnroll} className="mt-7 w-full bg-[#12172B] hover:bg-[#232A4A] text-white py-3.5 rounded-lg font-bold">
+              <div className="mt-7 border-t border-[#E4E0D2] pt-6">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="font-black text-lg">Pay directly via UPI</p>
+                    <p className="mt-1 text-xs text-[#6C728A]">
+                      Scan the QR and pay ₹4,999
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-[#EAF7F0] px-3 py-1 text-xs font-bold text-[#168A55]">
+                    UPI
+                  </span>
+                </div>
+
+                <div className="mt-4 flex flex-col sm:flex-row items-center gap-5 rounded-xl bg-[#F6F4ED] p-4">
+                  <div className="shrink-0 rounded-xl border border-[#E4E0D2] bg-white p-2">
+                    <img
+                      src={upiQr}
+                      alt="UPI payment QR code for InnovationAI Labs"
+                      className="h-40 w-40"
+                    />
+                  </div>
+                  <div className="text-center sm:text-left">
+                    <p className="text-sm font-bold text-[#12172B]">7507730786@ptaxis</p>
+                    <p className="mt-1 text-xs leading-relaxed text-[#6C728A]">
+                      After payment, enter your UTR / transaction ID so we can verify the payment.
+                    </p>
+                    <button
+                      onClick={handleEnroll}
+                      className="mt-4 bg-[#F2A93B] hover:bg-[#F5BC63] text-[#12172B] px-5 py-2.5 rounded-lg font-extrabold text-sm"
+                    >
+                      I Have Paid — Submit UTR
+                    </button>
+                  </div>
+                </div>
+
+                <p className="mt-3 text-[11px] leading-relaxed text-[#7A8097]">
+                  UPI QR payments are manually verified before course access is activated.
+                </p>
+              </div>
+
+              <button onClick={handleEnroll} className="mt-6 w-full bg-[#12172B] hover:bg-[#232A4A] text-white py-3.5 rounded-lg font-bold">
                 Start My Enrollment
               </button>
             </div>
