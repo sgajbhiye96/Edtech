@@ -19,10 +19,11 @@ ALLOWED_HOSTS = os.environ.get(
    "ALLOWED_HOSTS", "localhost,127.0.0.1"
 ).split(",")
 
-# Cashfree credentials (load from environment)
-CASHFREE_APP_ID    = os.environ.get("CASHFREE_APP_ID", "")
-CASHFREE_SECRET_KEY = os.environ.get("CASHFREE_SECRET_KEY", "")
-CASHFREE_ENV       = os.environ.get("CASHFREE_ENV", "sandbox")  # sandbox | production
+# ─── Razorpay ───────────────────────────────────────────
+RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "")
+RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET", "")
+RAZORPAY_WEBHOOK_SECRET = os.environ.get("RAZORPAY_WEBHOOK_SECRET", "")
+GENAI_AGENTIC_PRICE = os.environ.get("GENAI_AGENTIC_PRICE", "4999.00")
 
 # ─── Applications ─────────────────────────────────────────
 INSTALLED_APPS = [
@@ -161,3 +162,4 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_HOST_USER')
 ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL')
+GENAI_AGENTIC_PRICE = os.environ.get("GENAI_AGENTIC_PRICE", "4999.00")
