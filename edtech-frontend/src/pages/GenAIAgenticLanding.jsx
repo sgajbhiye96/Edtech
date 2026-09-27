@@ -130,7 +130,13 @@ export default function GenAIAgenticLanding() {
 
   return (
     <div className="min-h-screen bg-[#F6F4ED] text-[#12172B] font-['Inter',sans-serif]">
-      {showPayment && selectedBatch && (\n        <PaymentModal\n          batch={{ ...selectedBatch, course_title: course.title, price }}\n          onClose={() => setShowPayment(false)}\n          onSuccess={handleSuccess}\n        />\n      )}
+      {showPayment && selectedBatch && (
+        <PaymentModal
+          batch={{ ...selectedBatch, course_title: course.title, price }}
+          onClose={() => setShowPayment(false)}
+          onSuccess={handleSuccess}
+        />
+      )}
 
       <section className="relative overflow-hidden bg-[#12172B] text-white">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(242,169,59,0.18),transparent_35%),radial-gradient(circle_at_80%_20%,rgba(110,231,183,0.14),transparent_30%)]" />
