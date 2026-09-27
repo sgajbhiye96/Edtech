@@ -26,6 +26,17 @@ RAZORPAY_WEBHOOK_SECRET = settings.RAZORPAY_WEBHOOK_SECRET
 RAZORPAY_BASE_URL = "https://api.razorpay.com/v1"
 
 
+def is_genai_agentic_course(course):
+    title = (course.title or "").lower()
+    return "generative" in title and "agentic" in title
+
+
+def calculate_batch_amount(batch):
+    if is_genai_agentic_course(batch.course):
+        return Decimal(settings.GENAI_AGENTIC_PRICE)
+    return Decimal(batch.price)
+
+
 def generate_order_id():
     return f"ORD-{uuid.uuid4().hex[:16].upper()}"
 
@@ -180,7 +191,7 @@ class CreateOrderView(APIView):
                 reservation_created = True
 
 
-        amount = Decimal(batch.price)
+        amount = calculate_batch_amount(batch)
         amount_paise = int(amount * 100)
         order_id = generate_order_id()
 
