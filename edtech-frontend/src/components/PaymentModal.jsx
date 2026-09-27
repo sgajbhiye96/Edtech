@@ -17,6 +17,7 @@ function loadRazorpay() {
 export default function PaymentModal({ batch, onClose, onSuccess }) {
   const [step, setStep] = useState("creating");
   const [error, setError] = useState("");
+  const [displayAmount, setDisplayAmount] = useState(Number(batch.price || 0));
   const stepRef = useRef("creating");
 
   useEffect(() => { startPayment(); }, []);
@@ -30,6 +31,7 @@ export default function PaymentModal({ batch, onClose, onSuccess }) {
       const orderResponse = await API.post("/payments/create-order/", { batch_id: batch.id });
       await loadRazorpay();
       const { key_id, order_id, amount, currency } = orderResponse.data;
+      setDisplayAmount(Number(amount || 0) / 100);
 
       const options = {
         key: key_id, amount, currency, name: "Innovation AI Labs",
@@ -64,7 +66,7 @@ export default function PaymentModal({ batch, onClose, onSuccess }) {
     }
   };
 
-  const amount = Number(batch.price || 0).toLocaleString("en-IN");
+  const amount = Number(displayAmount || 0).toLocaleString("en-IN");
 
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-[3px] animate-modal-backdrop" onClick={step === "failed" || step === "cancelled" ? onClose : undefined}>
