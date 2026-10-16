@@ -45,7 +45,7 @@ export default function Courses() {
   return (
     <div className="font-['Inter',sans-serif] bg-[#F6F4ED] min-h-screen">
       {/* HEADER */}
-      <section className="bg-[#12172B] px-6 pt-16 pb-12 text-center">
+      <section className="bg-[#12172B] px-6 pt-16 pb-12 text-center animate-page-in">
         <h1 className="font-['Sora',sans-serif] text-3xl md:text-5xl font-extrabold text-white mb-3 tracking-tight">
           Explore our <span className="text-[#F2A93B]">courses</span>
         </h1>
@@ -100,7 +100,7 @@ export default function Courses() {
             filtered.map((c) => (
               <div
                 key={c.id}
-                className="bg-white rounded-md overflow-hidden border border-[#E4E0D2] flex flex-col transition-shadow hover:shadow-[0_12px_40px_-10px_rgba(18,23,43,0.15)] hover:-translate-y-1 duration-200"
+                className="bg-white rounded-md overflow-hidden border border-[#E4E0D2] flex flex-col transition-all duration-500 hover:shadow-[0_18px_45px_-12px_rgba(18,23,43,0.18)] hover:-translate-y-1 hover:border-[#D7CDAF] animate-card-in"
               >
                 <div className="relative">
                   <img
@@ -109,7 +109,7 @@ export default function Courses() {
                     className="w-full h-[180px] object-cover block"
                   />
                   {c.category && (
-                    <span className="absolute top-3 left-3 bg-[#12172B]/90 text-white text-[0.72rem] font-semibold px-2.5 py-1 rounded-full uppercase tracking-wide">
+                    <span className="premium-badge absolute top-3 left-3 bg-[#12172B]/90 text-white text-[0.72rem] font-semibold px-2.5 py-1 rounded-full uppercase tracking-wide">
                       {c.category}
                     </span>
                   )}
@@ -130,7 +130,7 @@ export default function Courses() {
                     </div>
                     <Link
                       to={`/courses/${c.id}`}
-                      className="bg-[#F2A93B] text-[#12172B] px-4 py-2 rounded-[3px] text-[0.85rem] font-bold whitespace-nowrap hover:bg-[#F5BC63] transition-colors"
+                      className="premium-button bg-[#F2A93B] text-[#12172B] px-4 py-2 rounded-[3px] text-[0.85rem] font-bold whitespace-nowrap hover:bg-[#F5BC63] transition-colors"
                     >
                       View
                     </Link>

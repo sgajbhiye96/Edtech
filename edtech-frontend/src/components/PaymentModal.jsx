@@ -1,400 +1,335 @@
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import API from "../services/api";
-// Load Cashfree JS SDK dynamically
-const loadCashfreeSDK = () =>
-new Promise((resolve, reject) => {
-if (window.Cashfree) return resolve(window.Cashfree);
-const script = document.createElement("script");
-script.src = "https://sdk.cashfree.com/js/v3/cashfree.js";
-script.onload = () => resolve(window.Cashfree);
-script.onerror = () => reject(new Error("Failed to load Cashfree SDK"));
-document.head.appendChild(script);
-});
-const STEPS = {
-INIT: "init", // Creating order
-PAYING: "paying", // Cashfree checkout open
-VERIFYING: "verifying", // Polling for status
-SUCCESS: "success",
-FAILED: "failed",
-};
-export default function PaymentModal({ course, onClose, onSuccess }) {
-const [step, setStep] = useState(STEPS.INIT);
-const [error, setError] = useState("");
-const [orderId, setOrderId] = useState("");
-const [paymentId, setPaymentId] = useState("");
-const price = course?.price || 999;
-const gst = Math.round(price * 0.18);
-const total = price + gst;
-// Auto-start on mount
-useEffect(() => {
-startPayment();
-}, []);
-const startPayment = async () => {
-setStep(STEPS.INIT);
-setError("");
-try {
-// 1. Create order on backend
-const res = await API.post("/payments/create-order/", {
+import upiQr from "../assets/siddharth-upi-qr.svg";
 
-course_id: course?.id,
-amount: total,
-});
-const { order_id, payment_session_id } = res.data;
-setOrderId(order_id);
-// 2. Load Cashfree SDK
-const CashfreeConstructor = await loadCashfreeSDK();
-const cashfree = new CashfreeConstructor({
-mode: import.meta.env.VITE_CASHFREE_ENV === "production"
-? "production"
-: "sandbox",
-});
-setStep(STEPS.PAYING);
-// 3. Open Cashfree checkout (opens in a popup/redirect)
-const result = await cashfree.checkout({
-paymentSessionId: payment_session_id,
-redirectTarget: "_modal", // opens as modal overlay
-});
-// 4. Cashfree returns result
-if (result.error) {
-setError(result.error.message || "Payment was cancelled or failed.");
-setStep(STEPS.FAILED);
-return;
-}
-// 5. Verify on backend (poll until confirmed)
-setStep(STEPS.VERIFYING);
-await pollVerification(order_id);
-} catch (err) {
-const msg = err?.response?.data?.error || err?.message || "Something went wrong.";
-setError(msg);
-setStep(STEPS.FAILED);
-}
-};
-// Poll backend every 2s for up to 30s
-const pollVerification = async (order_id) => {
-const maxAttempts = 15;
-for (let i = 0; i < maxAttempts; i++) {
-await new Promise((r) => setTimeout(r, 2000));
-try {
+const RAZORPAY_SCRIPT = "https://checkout.razorpay.com/v1/checkout.js";
 
-const res = await API.get(`/payments/verify/${order_id}/`);
-const { status, payment_id } = res.data;
-if (status === "SUCCESS") {
-setPaymentId(payment_id || "");
-setStep(STEPS.SUCCESS);
-return;
+function loadRazorpay() {
+  return new Promise((resolve, reject) => {
+    if (window.Razorpay) return resolve(true);
+    const script = document.createElement("script");
+    script.src = RAZORPAY_SCRIPT;
+    script.onload = () => resolve(true);
+    script.onerror = () => reject(new Error("Unable to load Razorpay checkout."));
+    document.body.appendChild(script);
+  });
 }
-if (status === "FAILED" || status === "CANCELLED") {
-setError("Payment failed or was cancelled. Please try again.");
-setStep(STEPS.FAILED);
-return;
-}
-// PENDING → keep polling
-} catch {
-// Network hiccup — keep polling
-}
-}
-// Timeout
-setError("Payment verification timed out. If money was deducted, contact support.");
-setStep(STEPS.FAILED);
-};
-// ── Styles ──────────────────────────────────────────────────
-const overlay = {
-position: "fixed", inset: 0,
-background: "rgba(0,0,0,0.65)",
-backdropFilter: "blur(6px)",
-zIndex: 1000,
-display: "flex", alignItems: "center", justifyContent: "center",
-padding: "1rem",
-fontFamily: "'DM Sans', sans-serif",
-};
-const modal = {
-background: "#fff",
-borderRadius: "20px",
-width: "100%", maxWidth: "420px",
-boxShadow: "0 32px 80px rgba(0,0,0,0.25)",
-overflow: "hidden",
-animation: "paySlideUp 0.28s cubic-bezier(.22,.68,0,1.2)",
-};
-return (
-<div style={overlay} onClick={step === STEPS.FAILED ? onClose : undefined}>
-<style>{`
-@keyframes paySlideUp {
 
-from { transform: translateY(40px) scale(0.97); opacity: 0; }
-to { transform: translateY(0) scale(1); opacity: 1; }
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-@keyframes checkPop {
-0% { transform: scale(0) rotate(-20deg); opacity: 0; }
-60% { transform: scale(1.15) rotate(5deg); }
-100%{ transform: scale(1) rotate(0deg); opacity: 1; }
-}
-@keyframes dot {
-0%,80%,100% { transform: scale(0.6); opacity: 0.3; }
-40% { transform: scale(1); opacity: 1; }
-}
-`}</style>
-<div style={modal} onClick={(e) => e.stopPropagation()}>
-{/* Header */}
-<div style={{
-background: "linear-gradient(135deg, #0f0c29, #1a1a4e)",
-padding: "20px 22px 18px",
-display: "flex", justifyContent: "space-between", alignItems: "flex-start",
-}}>
-<div>
-<div style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "5px" }}>
-Secured by Cashfree · PCI DSS Compliant
-</div>
-<div style={{ color: "#fff", fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: "1.6rem", letterSpacing: "-0.02em" }}>
-₹{total.toLocaleString("en-IN")}
-</div>
-<div style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.8rem", marginTop: "2px" }}>
-{course?.title} · incl. 18% GST
-</div>
-</div>
-{(step === STEPS.FAILED || step === STEPS.SUCCESS) && (
-<button
-onClick={onClose}
-style={{
-background: "rgba(255,255,255,0.1)", border: "none",
-color: "#fff", width: "30px", height: "30px",
-borderRadius: "50%", cursor: "pointer",
-display: "flex", alignItems: "center", justifyContent: "center",
-}}
->✕</button>
-)}
-</div>
+export default function PaymentModal({ batch, course, onClose, onSuccess }) {
+  const item = batch || course;
+  const isBatch = Boolean(batch);
+  const [step, setStep] = useState("choose");
+  const [error, setError] = useState("");
+  const [displayAmount, setDisplayAmount] = useState(Number(item?.price || 0));
+  const [utr, setUtr] = useState("");
+  const stepRef = useRef("choose");
 
-{/* Body */}
-<div style={{ padding: "32px 24px" }}>
-{/* ── INIT: Creating order ── */}
-{step === STEPS.INIT && (
-<div style={{ textAlign: "center" }}>
-<div style={{
-width: "52px", height: "52px",
-border: "4px solid #e5e7eb",
-borderTop: "4px solid #6366f1",
-borderRadius: "50%",
-margin: "0 auto 20px",
-animation: "spin 0.75s linear infinite",
-}} />
-<h3 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, color: "#0f0c29", marginBottom: "8px" }}>
-Preparing Payment
-</h3>
-<p style={{ color: "#9ca3af", fontSize: "0.88rem" }}>
-Setting up your secure checkout...
-</p>
-</div>
-)}
-{/* ── PAYING: Cashfree modal is open ── */}
-{step === STEPS.PAYING && (
-<div style={{ textAlign: "center" }}>
-<div style={{ fontSize: "3rem", marginBottom: "16px" }}> </div>
-<h3 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, color: "#0f0c29", marginBottom: "8px" }}>
-Complete Your Payment
-</h3>
-<p style={{ color: "#6b7280", fontSize: "0.88rem", marginBottom: "20px" }}>
-The Cashfree payment window is open. Choose UPI, card, or net banking to pay.
-</p>
-{/* Order summary */}
-<div style={{
-background: "#f9fafb", borderRadius: "12px",
-padding: "14px 16px", textAlign: "left",
-border: "1px solid #f0f0f0",
-}}>
-{[
-{ label: course?.title || "Course", val: `₹${price.toLocaleString("en-IN")}` },
-{ label: "GST (18%)", val: `₹${gst.toLocaleString("en-IN")}` },
-].map((r) => (
-<div key={r.label} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem", color: "#6b7280", marginBottom: "6px" }}>
-<span>{r.label}</span><span>{r.val}</span>
-</div>
+  useEffect(() => {
+    stepRef.current = step;
+  }, [step]);
 
-))}
-<div style={{
-display: "flex", justifyContent: "space-between",
-fontWeight: 800, fontSize: "1rem", color: "#111",
-borderTop: "1px solid #e5e7eb", paddingTop: "8px",
-fontFamily: "'Syne', sans-serif",
-}}>
-<span>Total</span>
-<span>₹{total.toLocaleString("en-IN")}</span>
-</div>
-</div>
-<p style={{ color: "#9ca3af", fontSize: "0.75rem", marginTop: "16px" }}>
-Do not close this window until payment is complete
-</p>
-</div>
-)}
-{/* ── VERIFYING ── */}
-{step === STEPS.VERIFYING && (
-<div style={{ textAlign: "center" }}>
-<div style={{ display: "flex", justifyContent: "center", gap: "8px", marginBottom: "24px" }}>
-{[0, 1, 2].map((i) => (
-<div key={i} style={{
-width: "12px", height: "12px",
-borderRadius: "50%",
-background: "#6366f1",
-animation: `dot 1.2s ease-in-out ${i * 0.2}s infinite`,
-}} />
-))}
-</div>
-<h3 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, color: "#0f0c29", marginBottom: "8px" }}>
-Verifying Payment
-</h3>
-<p style={{ color: "#6b7280", fontSize: "0.88rem", marginBottom: "6px" }}>
-Confirming your payment with Cashfree...
-</p>
-<p style={{ color: "#9ca3af", fontSize: "0.78rem" }}>
-This usually takes 5–10 seconds. Please wait.
-</p>
-<div style={{
-marginTop: "20px",
-background: "#fefce8",
-border: "1px solid #fde68a",
-borderRadius: "10px",
-padding: "10px 14px",
-fontSize: "0.78rem",
+  const updateStep = (nextStep) => {
+    stepRef.current = nextStep;
+    setStep(nextStep);
+  };
 
-color: "#92400e",
-}}>
-⚠ Do not refresh or close this page
-</div>
-</div>
-)}
-{/* ── SUCCESS ── */}
-{step === STEPS.SUCCESS && (
-<div style={{ textAlign: "center" }}>
-<div style={{
-width: "80px", height: "80px",
-background: "linear-gradient(135deg, #10b981, #059669)",
-borderRadius: "50%",
-display: "flex", alignItems: "center", justifyContent: "center",
-margin: "0 auto 20px",
-fontSize: "2.2rem", color: "white",
-animation: "checkPop 0.5s cubic-bezier(.22,.68,0,1.2)",
-boxShadow: "0 8px 32px rgba(16,185,129,0.4)",
-}}>
-✓
-</div>
-<h3 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: "1.4rem", color: "#0f0c29", marginBottom: "6px" }}>
-Payment Confirmed!
-</h3>
-<p style={{ color: "#6b7280", fontSize: "0.9rem", marginBottom: "4px" }}>
-₹{total.toLocaleString("en-IN")} paid successfully
-</p>
-<p style={{ color: "#6366f1", fontWeight: 700, fontSize: "0.9rem", marginBottom: "20px" }}>
-{course?.title}
-</p>
-{/* Transaction details */}
-<div style={{
-background: "#f9fafb", borderRadius: "12px",
-padding: "14px 16px", marginBottom: "20px",
-border: "1px solid #f0f0f0", textAlign: "left",
-}}>
-<div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", marginBottom: "8px" }}>
-<span style={{ color: "#9ca3af" }}>Order ID</span>
-<span style={{ fontFamily: "monospace", fontWeight: 600, color: "#374151", fontSize: "0.78rem" }}>{orderId}</span>
-</div>
-{paymentId && (
-<div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", marginBottom: "8px" }}>
-<span style={{ color: "#9ca3af" }}>Payment ID</span>
-<span style={{ fontFamily: "monospace", fontWeight: 600, color: "#374151", fontSize: "0.78rem" }}>{paymentId}</span>
+  const startPayment = async () => {
+    updateStep("creating");
+    setError("");
+    try {
+      const orderResponse = await API.post("/payments/create-order/", isBatch ? { batch_id: item.id } : { course_id: item.id });
+      await loadRazorpay();
+      const { key_id, order_id, amount, currency } = orderResponse.data;
+      setDisplayAmount(Number(amount || 0) / 100);
 
-</div>
-)}
-<div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem" }}>
-<span style={{ color: "#9ca3af" }}>Amount Paid</span>
-<span style={{ fontWeight: 700, color: "#10b981" }}>₹{total.toLocaleString("en-IN")}</span>
-</div>
-</div>
-<button
-onClick={() => onSuccess?.()}
-style={{
-width: "100%",
-background: "linear-gradient(135deg, #10b981, #059669)",
-color: "#fff", border: "none",
-padding: "14px", borderRadius: "12px",
-fontSize: "1rem", fontWeight: 700,
-cursor: "pointer",
-fontFamily: "'Syne', sans-serif",
-boxShadow: "0 6px 24px rgba(16,185,129,0.35)",
-}}
->
-Go to My Dashboard →
-</button>
-<p style={{ color: "#9ca3af", fontSize: "0.75rem", marginTop: "10px" }}>
-A confirmation email has been sent to you
-</p>
-</div>
-)}
-{/* ── FAILED ── */}
-{step === STEPS.FAILED && (
-<div style={{ textAlign: "center" }}>
-<div style={{
-width: "72px", height: "72px",
-background: "linear-gradient(135deg, #ef4444, #dc2626)",
-borderRadius: "50%",
-display: "flex", alignItems: "center", justifyContent: "center",
-margin: "0 auto 20px",
-fontSize: "2rem", color: "white",
-boxShadow: "0 8px 28px rgba(239,68,68,0.35)",
-}}>
-✕
-</div>
-<h3 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: "1.2rem", color: "#0f0c29", marginBottom: "8px" }}>
-Payment Failed
-</h3>
+      const options = {
+        key: key_id,
+        amount,
+        currency,
+        name: "Innovation AI Labs",
+        description: item.course_title || item.course?.title || item.title || item.name,
+        order_id,
+        handler: async (response) => {
+          updateStep("verifying");
+          try {
+            const verifyResponse = await API.post("/payments/verify/", response);
+            if (verifyResponse.data.status === "SUCCESS") {
+              updateStep("success");
+              onSuccess?.(verifyResponse.data);
+            } else {
+              throw new Error("Payment could not be verified.");
+            }
+          } catch (err) {
+            setError(
+              err?.response?.data?.error ||
+                "Payment verification failed. If money was deducted, please contact support."
+            );
+            updateStep("failed");
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            if (stepRef.current !== "verifying") updateStep("cancelled");
+          },
+        },
+        theme: { color: "#12172B" },
+      };
 
-<p style={{ color: "#6b7280", fontSize: "0.88rem", marginBottom: "20px" }}>
-{error || "Something went wrong. Please try again."}
-</p>
-<div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-<button
-onClick={startPayment}
-style={{
-width: "100%",
-background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-color: "#fff", border: "none",
-padding: "13px", borderRadius: "12px",
-fontSize: "0.95rem", fontWeight: 700,
-cursor: "pointer",
-fontFamily: "'Syne', sans-serif",
-}}
->
-Try Again →
-</button>
-<button
-onClick={onClose}
-style={{
-width: "100%",
-background: "none",
-border: "1.5px solid #e5e7eb",
-color: "#6b7280",
-padding: "12px", borderRadius: "12px",
-fontSize: "0.9rem",
-cursor: "pointer",
-}}
->
-Cancel
-</button>
-</div>
-{error.includes("deducted") && (
-<div style={{
-marginTop: "16px",
-background: "#fefce8", border: "1px solid #fde68a",
-borderRadius: "10px", padding: "12px 14px",
-fontSize: "0.78rem", color: "#92400e",
-}}>
-If money was deducted, contact us at{" "}
-<strong>support@innovationailabs.in</strong> with your Order ID: <strong>{orderId}</strong>
-</div>
-)}
-</div>
+      const razorpay = new window.Razorpay(options);
+      razorpay.on("payment.failed", (response) => {
+        setError(response?.error?.description || "Payment failed. Please try again.");
+        updateStep("failed");
+      });
+      updateStep("paying");
+      razorpay.open();
+    } catch (err) {
+      setError(err?.response?.data?.error || err?.message || "Unable to start payment.");
+      updateStep("failed");
+    }
+  };
 
-)}
-</div>
-</div>
-</div>
-);
+  const submitUPI = async (event) => {
+    event.preventDefault();
+    setError("");
+    const cleanedUtr = utr.trim().replace(/\s+/g, "");
+
+    if (
+      cleanedUtr.length < 6 ||
+      cleanedUtr.length > 40 ||
+      !/^[a-zA-Z0-9]+$/.test(cleanedUtr)
+    ) {
+      setError("Please enter a valid UPI UTR / transaction ID.");
+      return;
+    }
+
+    updateStep("upi-submitting");
+    try {
+      const response = await API.post("/payments/upi-submit/", {
+        batch_id: batch.id,
+        utr: cleanedUtr,
+      });
+      setDisplayAmount(Number(response.data.amount || displayAmount));
+      updateStep("upi-submitted");
+    } catch (err) {
+      setError(err?.response?.data?.error || "Unable to submit your UPI payment.");
+      updateStep("upi");
+    }
+  };
+
+  const amount = Number(displayAmount || 0).toLocaleString("en-IN");
+  const closeOnBackdrop =
+    step === "failed" || step === "cancelled" || step === "upi-submitted";
+
+  return (
+    <div
+      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-[3px] animate-modal-backdrop"
+      onClick={closeOnBackdrop ? onClose : undefined}
+    >
+      <div
+        className="w-full max-w-md max-h-[92vh] overflow-y-auto rounded-2xl bg-white shadow-2xl animate-modal-panel"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="bg-[#12172B] p-6 text-white">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="text-xs uppercase tracking-wider text-white/50">Secure payment</div>
+              <div className="mt-1 text-2xl font-bold">₹{amount}</div>
+              <div className="mt-1 text-sm text-white/60">
+                {item.course_title || item.course?.title || item.title || item.name}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-2xl leading-none text-white/60 hover:text-white"
+              aria-label="Close payment"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+
+        <div className="p-7 text-center">
+          {step === "choose" && (
+            <div className="animate-content-in">
+              <h3 className="text-lg font-bold text-[#12172B]">Choose payment method</h3>
+              <p className="mt-2 text-sm text-gray-500">
+                Pay securely with Razorpay or scan the UPI QR code.
+              </p>
+              <button
+                type="button"
+                onClick={startPayment}
+                className="mt-6 w-full rounded-md bg-[#F2A93B] px-5 py-3 font-bold text-[#12172B] hover:bg-[#F5BC63] transition-all"
+              >
+                Pay ₹{amount} with Razorpay
+              </button>
+              {isBatch && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setError("");
+                      updateStep("upi");
+                    }}
+                    className="mt-3 w-full rounded-md border-2 border-[#12172B] px-5 py-3 font-bold text-[#12172B] hover:bg-gray-50 transition-all"
+                  >
+                    Pay ₹{amount} via UPI QR
+                  </button>
+                  <p className="mt-4 text-xs text-gray-400">
+                    UPI QR payments are manually verified before enrollment is activated.
+                  </p>
+                </>
+              )}
+            </div>
+          )}
+
+          {(step === "creating" || step === "verifying") && (
+            <div className="animate-content-in">
+              <div className="mx-auto mb-5 h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-[#F2A93B]" />
+              <h3 className="text-lg font-bold text-[#12172B]">
+                {step === "creating" ? "Preparing payment" : "Verifying payment"}
+              </h3>
+              <p className="mt-2 text-sm text-gray-500">
+                {step === "creating"
+                  ? "Creating your secure Razorpay order..."
+                  : "Confirming your payment with our server. Please wait."}
+              </p>
+            </div>
+          )}
+
+          {step === "paying" && (
+            <div className="animate-content-in">
+              <h3 className="text-lg font-bold text-[#12172B]">Complete your payment</h3>
+              <p className="mt-2 text-sm text-gray-500">
+                Razorpay checkout is open. Complete the payment and keep this page open.
+              </p>
+            </div>
+          )}
+
+          {step === "upi" && (
+            <div className="animate-content-in">
+              <h3 className="text-lg font-bold text-[#12172B]">Pay with UPI</h3>
+              <p className="mt-2 text-sm text-gray-500">
+                Scan the QR code and pay exactly ₹{amount}.
+              </p>
+              <div className="mx-auto mt-5 w-fit rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
+                <img
+                  src={upiQr}
+                  alt="UPI payment QR code for Innovation AI Labs"
+                  className="h-64 w-64"
+                />
+              </div>
+              <div className="mt-3 text-sm font-semibold text-[#12172B]">
+                UPI ID: 7507730786@ptaxis
+              </div>
+              <form onSubmit={submitUPI} className="mt-5 text-left">
+                <label className="text-sm font-semibold text-gray-700">
+                  UPI UTR / Transaction ID
+                </label>
+                <input
+                  value={utr}
+                  onChange={(e) => setUtr(e.target.value)}
+                  placeholder="Enter transaction ID after payment"
+                  className="mt-2 w-full rounded-md border border-gray-300 px-4 py-3 outline-none focus:border-[#12172B]"
+                  autoComplete="off"
+                />
+                {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+                <button
+                  type="submit"
+                  className="mt-4 w-full rounded-md bg-[#12172B] px-5 py-3 font-bold text-white hover:opacity-90 transition-all"
+                >
+                  I have paid — Submit UTR
+                </button>
+              </form>
+              <button
+                type="button"
+                onClick={() => {
+                  setError("");
+                  updateStep("choose");
+                }}
+                className="mt-3 text-sm font-semibold text-gray-500 hover:text-[#12172B]"
+              >
+                ← Back to payment methods
+              </button>
+            </div>
+          )}
+
+          {step === "upi-submitting" && (
+            <div className="animate-content-in">
+              <div className="mx-auto mb-5 h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-[#F2A93B]" />
+              <h3 className="text-lg font-bold text-[#12172B]">Submitting payment</h3>
+              <p className="mt-2 text-sm text-gray-500">
+                Recording your UPI transaction for verification.
+              </p>
+            </div>
+          )}
+
+          {step === "upi-submitted" && (
+            <div className="animate-content-in">
+              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-amber-50 text-3xl text-amber-600">
+                ✓
+              </div>
+              <h3 className="text-xl font-bold text-[#12172B]">Payment submitted</h3>
+              <p className="mt-2 text-sm text-gray-500">
+                Your UPI payment has been recorded. We will verify the transaction and
+                activate your enrollment.
+              </p>
+              <button
+                type="button"
+                onClick={onClose}
+                className="mt-6 w-full rounded-md bg-[#F2A93B] px-5 py-3 font-bold text-[#12172B]"
+              >
+                Close
+              </button>
+            </div>
+          )}
+
+          {step === "success" && (
+            <div className="animate-content-in">
+              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[#E4F1E3] text-3xl text-[#3D7A38] animate-success-pop">
+                ✓
+              </div>
+              <h3 className="text-xl font-bold text-[#12172B]">Payment confirmed</h3>
+              <p className="mt-2 text-sm text-gray-500">Your enrollment is now active.</p>
+              <button
+                onClick={() => onSuccess?.()}
+                className="mt-6 w-full rounded-md bg-[#F2A93B] px-5 py-3 font-bold text-[#12172B]"
+              >
+                Go to dashboard →
+              </button>
+            </div>
+          )}
+
+          {(step === "failed" || step === "cancelled") && (
+            <div className="animate-content-in">
+              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-2xl text-red-600 animate-success-pop">
+                ✕
+              </div>
+              <h3 className="text-xl font-bold text-[#12172B]">
+                {step === "cancelled" ? "Payment cancelled" : "Payment failed"}
+              </h3>
+              <p className="mt-2 text-sm text-gray-500">{error || "No payment was completed."}</p>
+              <div className="mt-6 flex gap-3">
+                <button
+                  onClick={() => {
+                    setError("");
+                    updateStep("choose");
+                  }}
+                  className="flex-1 rounded-md bg-[#12172B] px-4 py-3 font-bold text-white"
+                >
+                  Try again
+                </button>
+                <button
+                  onClick={onClose}
+                  className="flex-1 rounded-md border border-gray-200 px-4 py-3 font-bold text-gray-700"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }

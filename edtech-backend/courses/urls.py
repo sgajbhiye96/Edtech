@@ -1,8 +1,37 @@
 from django.urls import path
-from .views import CourseListView, CourseDetailView
+from .views import (
+    CourseListView, CourseDetailView, CourseCreateView,
+    BatchListView, BatchDetailView, BatchCreateView, AdminBatchListView, AdminBatchDetailView, AdminBatchStudentsView,
+    LiveClassListView, LiveClassCreateView, AdminLiveClassListView, AdminLiveClassDetailView,
+    LearningResourceListView, LearningResourceCreateView, AdminLearningResourceListView, AdminLearningResourceDetailView,
+    AssignmentListView, AssignmentCreateView, AdminAssignmentListView, AdminAssignmentDetailView,
+    ProjectListView, ProjectCreateView, AdminProjectListView, AdminProjectDetailView,
+)
 
 urlpatterns = [
-    path('', CourseListView.as_view(), name="course-list"),
-    path('<int:pk>/', CourseDetailView.as_view(), name="course-detail"),
+    path("", CourseListView.as_view(), name="course-list"),
+    path("<int:pk>/", CourseDetailView.as_view(), name="course-detail"),
+    path("admin/create/", CourseCreateView.as_view(), name="course-create"),
+    path("batches/", BatchListView.as_view(), name="batch-list"),
+    path("batches/<int:pk>/", BatchDetailView.as_view(), name="batch-detail"),
+    path("batches/admin/", AdminBatchListView.as_view(), name="admin-batch-list"),
+    path("batches/admin/create/", BatchCreateView.as_view(), name="batch-create"),
+    path("batches/admin/<int:pk>/", AdminBatchDetailView.as_view(), name="admin-batch-detail"),
+    path("batches/admin/<int:pk>/students/", AdminBatchStudentsView.as_view(), name="admin-batch-students"),
+    path("live-classes/", LiveClassListView.as_view(), name="live-class-list"),
+    path("live-classes/admin/create/", LiveClassCreateView.as_view(), name="live-class-create"),
+    path("live-classes/admin/", AdminLiveClassListView.as_view(), name="admin-live-class-list"),
+    path("live-classes/admin/<int:pk>/", AdminLiveClassDetailView.as_view(), name="admin-live-class-detail"),
+    path("resources/", LearningResourceListView.as_view(), name="resource-list"),
+    path("resources/admin/create/", LearningResourceCreateView.as_view(), name="resource-create"),
+    path("resources/admin/", AdminLearningResourceListView.as_view(), name="admin-resource-list"),
+    path("resources/admin/<int:pk>/", AdminLearningResourceDetailView.as_view(), name="admin-resource-detail"),
+    path("assignments/", AssignmentListView.as_view(), name="assignment-list"),
+    path("assignments/admin/create/", AssignmentCreateView.as_view(), name="assignment-create"),
+    path("assignments/admin/", AdminAssignmentListView.as_view(), name="admin-assignment-list"),
+    path("assignments/admin/<int:pk>/", AdminAssignmentDetailView.as_view(), name="admin-assignment-detail"),
+    path("projects/", ProjectListView.as_view(), name="project-list"),
+    path("projects/admin/create/", ProjectCreateView.as_view(), name="project-create"),
+    path("projects/admin/", AdminProjectListView.as_view(), name="admin-project-list"),
+    path("projects/admin/<int:pk>/", AdminProjectDetailView.as_view(), name="admin-project-detail"),
 ]
-

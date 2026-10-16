@@ -59,6 +59,8 @@ INSTALLED_APPS = [
    'cloudinary_storage',
    'leads',
    'payments',
+   'cvbuilder',
+   'practice',
 ]
 
 # ─── Middleware ───────────────────────────────────────────
@@ -134,13 +136,18 @@ SIMPLE_JWT = {
 }
 
 # ─── CORS / CSRF ──────────────────────────────────────────
-CORS_ALLOWED_ORIGINS = os.environ.get(
-   "CORS_ALLOWED_ORIGINS", "http://localhost:3000"
-).split(",")
+def _csv_env(name):
+    return [value.strip() for value in os.environ.get(name, "").split(",") if value.strip()]
+
+CORS_ALLOWED_ORIGINS = list(dict.fromkeys(
+    _csv_env("CORS_ALLOWED_ORIGINS")
+    + ["https://innovationailabs.in", "https://www.innovationailabs.in", "http://localhost:3000"]
+))
 CORS_ALLOW_CREDENTIALS = True
-CSRF_TRUSTED_ORIGINS = os.environ.get(
-   "CSRF_TRUSTED_ORIGINS", "http://localhost:3000"
-).split(",")
+CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(
+    _csv_env("CSRF_TRUSTED_ORIGINS")
+    + ["https://innovationailabs.in", "https://www.innovationailabs.in", "http://localhost:3000"]
+))
 
 # ─── Static Files ─────────────────────────────────────────
 STATIC_URL = '/static/'

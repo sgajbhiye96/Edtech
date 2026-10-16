@@ -1,10 +1,12 @@
 import hashlib
 import hmac
+import json
 import uuid
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 import requests
 from django.conf import settings
+from django.db import transaction
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 
@@ -13,148 +15,451 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from courses.models import Course
+from courses.models import Batch, Course
 from enrollments.models import Enrollment
 from .models import Payment
+
 
 RAZORPAY_KEY_ID = settings.RAZORPAY_KEY_ID
 RAZORPAY_KEY_SECRET = settings.RAZORPAY_KEY_SECRET
 RAZORPAY_WEBHOOK_SECRET = settings.RAZORPAY_WEBHOOK_SECRET
 RAZORPAY_BASE_URL = "https://api.razorpay.com/v1"
 
-def generate_order_id():
-    return f"ORD-{uuid.uuid4().hex[:16].upper()}"
-
-def razorpay_request(method, path, **kwargs):
-    return requests.request(method, f"{RAZORPAY_BASE_URL}{path}",
-                            auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET),
-                            timeout=15, **kwargs)
 
 def is_genai_agentic_course(course):
     title = (course.title or "").lower()
-    return "generative" in title and "agentic" in title
+    return "agentic ai" in title or ("generative" in title and "agentic" in title)
 
-def calculate_order_amount(course):
-    if is_genai_agentic_course(course):
-        return Decimal(str(getattr(settings, "GENAI_AGENTIC_PRICE", "4999.00"))).quantize(Decimal("0.01"))
-    return Decimal(str(course.price)).quantize(Decimal("0.01"))
 
-def _auto_enroll(payment):
-    course = Course.objects.get(pk=payment.course_id)
-    Enrollment.objects.get_or_create(user=payment.user, course=course)
+def calculate_batch_amount(batch):
+    if is_genai_agentic_course(batch.course):
+        return Decimal(settings.GENAI_AGENTIC_PRICE)
+    return Decimal(batch.price)
 
-def _mark_payment_success(payment, payment_id):
-    payment.status = "SUCCESS"
-    payment.payment_id = str(payment_id or "")
-    payment.save(update_fields=["status", "payment_id", "updated_at"])
-    _auto_enroll(payment)
+
+def generate_order_id(prefix="ORD"):
+    return f"{prefix}-{uuid.uuid4().hex[:16].upper()}"
+def get_open_batch(batch_id):
+    try:
+        batch = Batch.objects.select_related("course").get(
+            pk=batch_id,
+            registration_open=True,
+            course__is_active=True,
+        )
+    except Batch.DoesNotExist:
+        return None, Response(
+            {"error": "Batch not found or registration is closed."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    if batch.status not in ("UPCOMING", "ONGOING"):
+        return None, Response(
+            {"error": "This batch is not accepting enrollments."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    return batch, None
+
+
+def reserve_enrollment(user, batch):
+    with transaction.atomic():
+        locked_batch = Batch.objects.select_for_update().get(pk=batch.pk)
+        enrollment = Enrollment.objects.filter(user=user, batch=locked_batch).first()
+
+        if enrollment and enrollment.status == "ACTIVE":
+            return None, Response(
+                {"error": "You are already enrolled in this batch."},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        if enrollment is None:
+            reserved_count = locked_batch.enrollments.filter(
+                status__in=("ACTIVE", "PENDING_PAYMENT")
+            ).count()
+            if reserved_count >= locked_batch.max_students:
+                return None, Response(
+                    {"error": "This batch is full."},
+                    status=status.HTTP_409_CONFLICT,
+                )
+            enrollment = Enrollment.objects.create(
+                user=user,
+                batch=locked_batch,
+                status="PENDING_PAYMENT",
+            )
+
+    return enrollment, None
+
+
+
+def razorpay_request(method, path, **kwargs):
+    return requests.request(
+        method,
+        f"{RAZORPAY_BASE_URL}{path}",
+        auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET),
+        timeout=15,
+        **kwargs,
+    )
+
+
+def activate_enrollment(payment):
+    with transaction.atomic():
+        locked_payment = Payment.objects.select_for_update().select_related("user", "batch").get(pk=payment.pk)
+        if locked_payment.status != "SUCCESS":
+            return
+        # Course-based orders use a closed legacy batch to preserve course access
+        # after the enrollment schema changes to batches.
+        if locked_payment.batch_id is None:
+            course = Course.objects.get(pk=locked_payment.course_id)
+            batch, _ = Batch.objects.get_or_create(
+                course_id=course.id, name="Legacy Batch",
+                defaults={"start_date": course.created_at.date(), "end_date": course.created_at.date(),
+                          "max_students": 100000, "price": course.price,
+                          "registration_open": False, "status": "COMPLETED"},
+            )
+            enrollment, created = Enrollment.objects.get_or_create(
+                user=locked_payment.user, batch=batch, defaults={"status": "ACTIVE"}
+            )
+            if not created and enrollment.status != "ACTIVE":
+                enrollment.status = "ACTIVE"
+                enrollment.save(update_fields=["status", "updated_at"])
+            return
+        batch = Batch.objects.select_for_update().get(pk=locked_payment.batch_id)
+        enrollment = (
+            Enrollment.objects.select_for_update()
+            .filter(user=locked_payment.user, batch=batch)
+            .first()
+        )
+
+        if enrollment and enrollment.status == "ACTIVE":
+            return
+
+        active_count = batch.enrollments.filter(status="ACTIVE").exclude(
+            pk=enrollment.pk if enrollment else None
+        ).count()
+
+        if active_count >= batch.max_students:
+            raise ValueError("This batch is full.")
+
+        if enrollment:
+            enrollment.status = "ACTIVE"
+            enrollment.save(update_fields=["status", "updated_at"])
+        else:
+            Enrollment.objects.create(
+                user=locked_payment.user,
+                batch=batch,
+                status="ACTIVE",
+            )
+
 
 class PaymentHistoryView(APIView):
     permission_classes = [IsAuthenticated]
+
     def get(self, request):
         payments = Payment.objects.filter(user=request.user).values(
-            "order_id", "course_id", "amount", "status", "created_at", "payment_id"
+            "order_id",
+            "batch_id",
+            "course_id",
+            "amount",
+            "status",
+            "created_at",
+            "payment_id",
+            "provider",
         )
         return Response(list(payments))
+
 
 class AdminPaymentListView(APIView):
     permission_classes = [IsAuthenticated]
+
     def get(self, request):
         if not request.user.is_staff:
             return Response({"error": "Forbidden"}, status=403)
-        payments = Payment.objects.select_related("user").all().values(
-            "order_id", "course_id", "amount", "status", "created_at",
-            "payment_id", "user__username", "user__email"
+
+        payments = Payment.objects.select_related("user", "batch").all().values(
+            "order_id",
+            "batch_id",
+            "course_id",
+            "amount",
+            "status",
+            "created_at",
+            "payment_id",
+            "provider",
+            "user__username",
+            "user__email",
         )
         return Response(list(payments))
 
+
+
+class AdminVerifyUPIPaymentView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        if not request.user.is_staff:
+            return Response({"error": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            payment = Payment.objects.select_related("batch", "user").get(pk=pk)
+        except Payment.DoesNotExist:
+            return Response({"error": "Payment not found."}, status=status.HTTP_404_NOT_FOUND)
+        if payment.provider != "UPI_QR" or payment.batch_id is None:
+            return Response({"error": "Only batch UPI QR payments can be verified here."}, status=400)
+        if payment.status == "SUCCESS":
+            return Response({"status": "SUCCESS", "order_id": payment.order_id})
+        if payment.status != "PENDING":
+            return Response({"error": "Only pending UPI payments can be approved."}, status=409)
+        payment.status = "SUCCESS"
+        payment.save(update_fields=["status", "updated_at"])
+        try:
+            activate_enrollment(payment)
+        except ValueError as exc:
+            payment.status = "PENDING"
+            payment.save(update_fields=["status", "updated_at"])
+            return Response({"error": str(exc)}, status=409)
+        return Response({"status": "SUCCESS", "order_id": payment.order_id, "batch_id": payment.batch_id})
+
+
 class CreateOrderView(APIView):
     permission_classes = [IsAuthenticated]
-    def post(self, request):
-        course_id = request.data.get("course_id")
-        if not course_id:
-            return Response({"error": "course_id is required"}, status=400)
-        try:
-            course = Course.objects.get(pk=course_id)
-        except Course.DoesNotExist:
-            return Response({"error": "Course not found"}, status=404)
 
-        amount = calculate_order_amount(course)
+    def post(self, request):
+        if request.data.get("course_id") and not request.data.get("batch_id"):
+            return self.create_course_order(request)
+        batch, error_response = get_open_batch(request.data.get("batch_id"))
+        if error_response:
+            return error_response
+
+        _, error_response = reserve_enrollment(request.user, batch)
+        if error_response:
+            return error_response
+
+        amount = calculate_batch_amount(batch)
+        amount_paise = int(amount * 100)
+        order_id = generate_order_id()
+
         payload = {
-            "amount": int(amount * 100),
+            "amount": amount_paise,
             "currency": "INR",
-            "receipt": generate_order_id(),
-            "notes": {"course_id": str(course.id), "user_id": str(request.user.id)},
+            "receipt": order_id,
+            "notes": {
+                "batch_id": str(batch.id),
+                "user_id": str(request.user.id),
+            },
         }
+
+        try:
+            response = razorpay_request("POST", "/orders", json=payload)
+            data = response.json()
+
+            if response.status_code >= 400:
+                Enrollment.objects.filter(
+                    user=request.user, batch=batch, status="PENDING_PAYMENT"
+                ).delete()
+                return Response(
+                    {"error": data.get("error", {}).get(
+                        "description", "Failed to create Razorpay order."
+                    )},
+                    status=status.HTTP_502_BAD_GATEWAY,
+                )
+
+            Payment.objects.create(
+                user=request.user,
+                course_id=batch.course_id,
+                batch=batch,
+                provider="RAZORPAY",
+                order_id=data["id"],
+                amount=amount,
+                currency="INR",
+                status="PENDING",
+            )
+
+            return Response({
+                "key_id": RAZORPAY_KEY_ID,
+                "order_id": data["id"],
+                "amount": amount_paise,
+                "currency": "INR",
+                "course_title": batch.course.title,
+                "batch_name": batch.name,
+            })
+        except requests.RequestException:
+            Enrollment.objects.filter(user=request.user, batch=batch, status="PENDING_PAYMENT").delete()
+            return Response({"error": "Payment gateway is temporarily unavailable."}, status=status.HTTP_502_BAD_GATEWAY)
+
+    def create_course_order(self, request):
+        try:
+            course = Course.objects.get(pk=request.data.get("course_id"), is_active=True)
+        except (Course.DoesNotExist, ValueError, TypeError):
+            return Response({"error": "Course not found."}, status=status.HTTP_404_NOT_FOUND)
+        amount = (Decimal(str(settings.GENAI_AGENTIC_PRICE)) if is_genai_agentic_course(course)
+                  else Decimal(str(course.price))).quantize(Decimal("0.01"))
+        amount_paise = int(amount * 100)
+        receipt = generate_order_id()
+        payload = {"amount": amount_paise, "currency": "INR", "receipt": receipt,
+                   "notes": {"course_id": str(course.id), "user_id": str(request.user.id)}}
         try:
             response = razorpay_request("POST", "/orders", json=payload)
             data = response.json()
             if response.status_code >= 400:
-                return Response(
-                    {"error": data.get("error", {}).get("description", "Failed to create Razorpay order.")},
-                    status=status.HTTP_502_BAD_GATEWAY,
-                )
-            Payment.objects.create(
-                user=request.user, course_id=course.id, order_id=data["id"],
-                amount=amount, currency="INR", status="PENDING"
-            )
-            return Response({
-                "key_id": RAZORPAY_KEY_ID, "order_id": data["id"],
-                "amount": int(amount * 100), "currency": "INR",
-                "course_title": course.title,
-            })
+                return Response({"error": data.get("error", {}).get("description", "Failed to create Razorpay order.")},
+                                status=status.HTTP_502_BAD_GATEWAY)
+            Payment.objects.create(user=request.user, course_id=course.id, batch=None, provider="RAZORPAY",
+                                   order_id=data["id"], amount=amount, currency="INR", status="PENDING")
+            return Response({"key_id": RAZORPAY_KEY_ID, "order_id": data["id"], "amount": amount_paise,
+                             "currency": "INR", "course_title": course.title, "course_id": course.id})
         except requests.RequestException:
-            return Response({"error": "Payment gateway is temporarily unavailable."}, status=502)
+            return Response({"error": "Payment gateway is temporarily unavailable."}, status=status.HTTP_502_BAD_GATEWAY)
+
+
+class SubmitUPIPaymentView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        batch, error_response = get_open_batch(request.data.get("batch_id"))
+        if error_response:
+            return error_response
+
+        utr = str(request.data.get("utr", "")).strip().replace(" ", "")
+        if len(utr) < 6 or len(utr) > 40 or not utr.isalnum():
+            return Response(
+                {"error": "Enter a valid UPI UTR / transaction ID."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        duplicate = Payment.objects.filter(
+            provider="UPI_QR", payment_id__iexact=utr
+        ).exclude(status="FAILED").first()
+        if duplicate:
+            return Response(
+                {"error": "This UTR has already been submitted."},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        _, error_response = reserve_enrollment(request.user, batch)
+        if error_response:
+            return error_response
+
+        amount = calculate_batch_amount(batch)
+        payment = Payment.objects.create(
+            user=request.user,
+            course_id=batch.course_id,
+            batch=batch,
+            provider="UPI_QR",
+            order_id=generate_order_id("UPI"),
+            payment_id=utr,
+            amount=amount,
+            currency="INR",
+            status="PENDING",
+        )
+
+        return Response({
+            "status": "PENDING",
+            "order_id": payment.order_id,
+            "amount": str(amount),
+            "message": "Payment submitted for verification.",
+        }, status=status.HTTP_201_CREATED)
+
 
 class VerifyPaymentView(APIView):
     permission_classes = [IsAuthenticated]
+
     def post(self, request):
         order_id = request.data.get("razorpay_order_id")
         payment_id = request.data.get("razorpay_payment_id")
         signature = request.data.get("razorpay_signature")
+
         if not all([order_id, payment_id, signature]):
-            return Response({"error": "Payment verification data is incomplete."}, status=400)
+            return Response(
+                {"error": "Payment verification data is incomplete."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         try:
-            payment = Payment.objects.get(order_id=order_id, user=request.user)
+            payment = Payment.objects.get(
+                order_id=order_id,
+                user=request.user,
+            )
         except Payment.DoesNotExist:
             return Response({"error": "Order not found."}, status=404)
+
         expected = hmac.new(
             RAZORPAY_KEY_SECRET.encode(),
-            f"{order_id}|{payment_id}".encode(),
+            f"{payment.order_id}|{payment_id}".encode(),
             hashlib.sha256,
         ).hexdigest()
+
         if not hmac.compare_digest(expected, signature):
-            return Response({"error": "Invalid payment signature."}, status=400)
-        if payment.status != "SUCCESS":
-            _mark_payment_success(payment, payment_id)
+            return Response(
+                {"error": "Invalid payment signature."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            payment.status = "SUCCESS"
+            payment.payment_id = payment_id
+            payment.save(update_fields=["status", "payment_id", "updated_at"])
+            activate_enrollment(payment)
+        except ValueError as exc:
+            return Response({"error": str(exc)}, status=409)
+
         return Response({
-            "status": "SUCCESS", "order_id": payment.order_id,
-            "payment_id": payment.payment_id, "course_id": payment.course_id,
+            "status": "SUCCESS",
+            "order_id": payment.order_id,
+            "payment_id": payment.payment_id,
+            "batch_id": payment.batch_id,
+            "course_id": payment.course_id,
         })
+
 
 @method_decorator(csrf_exempt, name="dispatch")
 class WebhookView(APIView):
     permission_classes = [AllowAny]
+
     def post(self, request):
         signature = request.headers.get("X-Razorpay-Signature", "")
         if not signature:
             return Response({"error": "Missing signature."}, status=400)
+
         expected = hmac.new(
-            RAZORPAY_WEBHOOK_SECRET.encode(), request.body, hashlib.sha256
+            RAZORPAY_WEBHOOK_SECRET.encode(),
+            request.body,
+            hashlib.sha256,
         ).hexdigest()
+
         if not hmac.compare_digest(expected, signature):
             return Response({"error": "Invalid signature."}, status=400)
-        if request.data.get("event") != "order.paid":
+
+        try:
+            payload = json.loads(request.body)
+        except json.JSONDecodeError:
+            return Response({"error": "Invalid JSON."}, status=400)
+
+        event = payload.get("event")
+        if event != "order.paid":
             return Response({"ok": True})
-        order = request.data.get("payload", {}).get("order", {}).get("entity", {})
-        payment_entity = request.data.get("payload", {}).get("payment", {}).get("entity", {})
+
+        order = payload.get("payload", {}).get("order", {}).get("entity", {})
+        payment_entity = payload.get("payload", {}).get(
+            "payment", {}
+        ).get("entity", {})
+
         order_id = order.get("id")
+        payment_id = payment_entity.get("id")
         if not order_id:
             return Response({"ok": True})
+
         try:
             payment = Payment.objects.get(order_id=order_id)
         except Payment.DoesNotExist:
             return Response({"ok": True})
+
         if payment.status != "SUCCESS":
-            _mark_payment_success(payment, payment_entity.get("id"))
+            payment.status = "SUCCESS"
+            payment.payment_id = payment_id or ""
+            payment.save(update_fields=["status", "payment_id", "updated_at"])
+
+        try:
+            activate_enrollment(payment)
+        except ValueError:
+            # Payment remains recorded; admin can resolve a capacity conflict.
+            return Response({"ok": True})
+
         return Response({"ok": True})

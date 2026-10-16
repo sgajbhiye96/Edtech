@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-
 import AuthProvider from "./context/AuthContext";
 import About from "./pages/About";
 import Navbar from "./components/Navbar";
@@ -10,8 +9,9 @@ import Courses from "./pages/Courses";
 import CourseDetails from "./pages/CourseDetails";
 import Dashboard from "./pages/Dashboard";
 import Home from "./pages/Home";
+import CVMaker from "./pages/CVMaker";
+import PracticeLab from "./pages/PracticeLab";
 import GenAIAgenticLanding from "./pages/GenAIAgenticLanding";
-
 import AdminLayout from "./admin/AdminLayout";
 import AdminLogin from "./admin/AdminLogin";
 import AdminDashboard from "./admin/Dashboard";
@@ -20,7 +20,7 @@ import AddCourse from "./admin/AddCourse";
 import Lessons from "./admin/Lessons";
 import Users from "./admin/Users";
 import Enrollments from "./admin/Enrollments";
-
+import Batches from "./admin/Batches";
 import "./index.css";
 
 export default function App() {
@@ -29,7 +29,6 @@ export default function App() {
       <BrowserRouter>
         <Navbar />
         <Routes>
-          {/* PUBLIC ROUTES */}
           <Route path="/" element={<Home />} />
           <Route path="/courses" element={<Courses />} />
           <Route path="/courses/:id" element={<CourseDetails />} />
@@ -37,24 +36,16 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/about" element={<About />} />
-
-          {/* USER PROTECTED ROUTE */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* ADMIN */}
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/cv-maker" element={<CVMaker />} />
+          <Route path="/practice" element={<ProtectedRoute><PracticeLab /></ProtectedRoute>} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="courses" element={<AdminCourses />} />
             <Route path="courses/add" element={<AddCourse />} />
             <Route path="courses/:id/lessons" element={<Lessons />} />
+            <Route path="batches" element={<Batches />} />
             <Route path="users" element={<Users />} />
             <Route path="enrollments" element={<Enrollments />} />
           </Route>
