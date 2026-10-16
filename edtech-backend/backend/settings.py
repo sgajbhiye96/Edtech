@@ -15,9 +15,22 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 # ─── Security ─────────────────────────────────────────────
 # SECRET_KEY = os.environ.get("SECRET_KEY")
 DEBUG = os.environ.get("DEBUG", "False") == "True"
-ALLOWED_HOSTS = os.environ.get(
-   "ALLOWED_HOSTS", "localhost,127.0.0.1"
-).split(",")
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.environ.get(
+        "ALLOWED_HOSTS", "localhost,127.0.0.1"
+    ).split(",")
+    if host.strip()
+]
+# Always allow the production app/site hostnames, even if the environment
+# variable ALLOWED_HOSTS is configured with only a partial list.
+for _host in (
+    "innovationailabs-edtech-x5sb8.ondigitalocean.app",
+    "innovationailabs.in",
+    "www.innovationailabs.in",
+):
+    if _host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(_host)
 
 # Cashfree credentials (load from environment)
 CASHFREE_APP_ID    = os.environ.get("CASHFREE_APP_ID", "")
@@ -82,7 +95,7 @@ TEMPLATES = [
    },
 ]
 
-# ─── Database ─────────────────────────────────────────────
+# ─── Database ───────────────────────────────────────────
 DATABASES = {
    "default": {
        "ENGINE": "django.db.backends.mysql",
@@ -98,7 +111,7 @@ DATABASES = {
    }
 }
 
-# ─── Auth ─────────────────────────────────────────────────
+# ─── Auth ───────────────────────────────────────────
 AUTH_USER_MODEL = 'users.User'
 AUTH_PASSWORD_VALIDATORS = [
    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -107,7 +120,7 @@ AUTH_PASSWORD_VALIDATORS = [
    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# ─── DRF & JWT ────────────────────────────────────────────
+# ─── DRF & JWT ─────────────────────────────────────────
 REST_FRAMEWORK = {
    'DEFAULT_AUTHENTICATION_CLASSES': (
        'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -121,7 +134,7 @@ SIMPLE_JWT = {
    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
 }
 
-# ─── CORS / CSRF ──────────────────────────────────────────
+# ─── CORS / CSRF ───────────────────────────────────────
 # Keep the production frontend origins enabled even when DigitalOcean
 # provides an environment variable with a custom/partial CORS list.
 def _csv_env(name):
@@ -151,12 +164,12 @@ CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(
    ]
 ))
 
-# ─── Static Files ─────────────────────────────────────────
+# ─── Static Files ───────────────────────────────────────
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
-# ─── Cloudinary (MEDIA STORAGE) ───────────────────────────
+# ─── Cloudinary (MEDIA STORAGE) ─────────────────────────
 # Force PDF/files to upload as raw, not image
 CLOUDINARY_STORAGE = {
    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
@@ -166,23 +179,23 @@ CLOUDINARY_STORAGE = {
 }
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
-# ─── Internationalisation ─────────────────────────────────
+# ─── Internationalisation ─────────────────────────────
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Asia/Kolkata'
 USE_I18N = True
 USE_TZ = True
 
-# ─── Default PK ──────────────────────────────────────────
+# ─── Default PK ───────────────────────────────────────
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# ─── Razorpay ────────────────────────────────────────────
+# ─── Razorpay ───────────────────────────────────────────
 RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "")
 RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET", "")
 RAZORPAY_WEBHOOK_SECRET = os.environ.get("RAZORPAY_WEBHOOK_SECRET", "")
 RAZORPAY_CV_PLAN_ID = os.environ.get("RAZORPAY_CV_PLAN_ID", "")
 GENAI_AGENTIC_PRICE = os.environ.get("GENAI_AGENTIC_PRICE", "4999.00")
 
-# ─── Email ────────────────────────────────────────────────
+# ─── Email ─────────────────────────────────────────────
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
