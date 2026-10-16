@@ -1,5 +1,13 @@
 from django.urls import path
-from .views import CreateOrderView, VerifyPaymentView, WebhookView, PaymentHistoryView, AdminPaymentListView
+from .views import (
+    AdminPaymentListView,
+    AdminVerifyUPIPaymentView,
+    CreateOrderView,
+    SubmitUPIPaymentView,
+    PaymentHistoryView,
+    VerifyPaymentView,
+    WebhookView,
+)
 
 urlpatterns = [
     path("create-order/", CreateOrderView.as_view(), name="create-order"),
