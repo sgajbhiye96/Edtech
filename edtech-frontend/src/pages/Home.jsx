@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <div className="bg-[#F6F4ED] text-[#12172B]">
       {/* HERO */}
-      <section className="max-w-[1280px] mx-auto grid md:grid-cols-[1.05fr_0.95fr] gap-14 px-6 md:px-12 pt-16 md:pt-24 pb-20 md:pb-28 items-center">
+      <section className="max-w-[1280px] mx-auto grid md:grid-cols-[1.05fr_0.95fr] gap-14 px-6 md:px-12 pt-16 md:pt-24 pb-20 md:pb-28 items-center animate-page-in">
         <div>
           <div className="inline-flex items-center gap-2 text-[13px] font-semibold text-[#C9821B] mb-5">
             <span className="w-[7px] h-[7px] rounded-full bg-[#F2A93B]" />
@@ -21,13 +21,13 @@ export default function Home() {
           <div className="mt-9 flex flex-wrap gap-4">
             <Link
               to="/courses"
-              className="bg-[#12172B] text-white font-bold text-[15.5px] px-7 py-[15px] rounded-[3px] hover:bg-[#232A4A] transition-colors"
+              className="premium-button bg-[#12172B] text-white font-bold text-[15.5px] px-7 py-[15px] rounded-[3px] hover:bg-[#232A4A] transition-colors"
             >
               Explore courses
             </Link>
             <Link
               to="/about"
-              className="border-[1.5px] border-[#12172B] font-bold text-[15.5px] px-7 py-[15px] rounded-[3px] hover:bg-[#12172B] hover:text-white transition-colors"
+              className="premium-button border-[1.5px] border-[#12172B] font-bold text-[15.5px] px-7 py-[15px] rounded-[3px] hover:bg-[#12172B] hover:text-white transition-colors"
             >
               Talk to a mentor
             </Link>
@@ -35,7 +35,7 @@ export default function Home() {
         </div>
 
         {/* code panel */}
-        <div className="bg-[#12172B] rounded-md overflow-hidden shadow-[0_24px_60px_-20px_rgba(18,23,43,0.35)]">
+        <div className="bg-[#12172B] rounded-md overflow-hidden shadow-[0_24px_60px_-20px_rgba(18,23,43,0.35)] animate-premium-float">
           <div className="flex gap-[7px] px-4 py-3.5 bg-[#0C0F1E]">
             <span className="w-2.5 h-2.5 rounded-full bg-[#3A4266]" />
             <span className="w-2.5 h-2.5 rounded-full bg-[#3A4266]" />
@@ -94,7 +94,7 @@ export default function Home() {
           ].map((track) => (
             <div
               key={track.num}
-              className="relative bg-white border border-[#E4E0D2] p-8"
+              className="group relative bg-white border border-[#E4E0D2] p-8 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_18px_45px_-18px_rgba(18,23,43,0.22)]"
             >
               <span className="absolute -top-px -left-px w-3.5 h-3.5 border-t-2 border-l-2 border-[#F2A93B]" />
               <span className="absolute -bottom-px -right-px w-3.5 h-3.5 border-b-2 border-r-2 border-[#F2A93B]" />
@@ -130,7 +130,7 @@ export default function Home() {
         </p>
         <Link
           to="/courses"
-          className="inline-block mt-7 bg-[#F2A93B] text-[#12172B] font-bold text-[15px] px-6 py-[11px] rounded-[3px] hover:bg-[#F5BC63] transition-colors"
+          className="premium-button inline-block mt-7 bg-[#F2A93B] text-[#12172B] font-bold text-[15px] px-6 py-[11px] rounded-[3px] hover:bg-[#F5BC63] transition-colors"
         >
           See how it works
         </Link>
