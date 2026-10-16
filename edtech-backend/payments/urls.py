@@ -8,4 +8,5 @@ urlpatterns = [
     path("webhook/", WebhookView.as_view(), name="payment-webhook"),
     path("history/", PaymentHistoryView.as_view(), name="payment-history"),
     path("admin/all/", AdminPaymentListView.as_view(), name="admin-payments"),
+    path("admin/<int:pk>/verify-upi/", AdminVerifyUPIPaymentView.as_view(), name="admin-verify-upi"),
 ]
