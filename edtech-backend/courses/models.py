@@ -1,3 +1,5 @@
+"""Course catalog and cohort models used by enrollment/dashboard endpoints."""
+
 from django.db import models
 from cloudinary_storage.storage import RawMediaCloudinaryStorage
 
