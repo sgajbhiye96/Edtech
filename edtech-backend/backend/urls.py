@@ -1,19 +1,29 @@
 from django.contrib import admin
+from django.http import JsonResponse
 from django.urls import path, include
 
 from django.conf import settings
 from django.conf.urls.static import static
 
+
+def health_check(request):
+    """Lightweight service check for the deployed Django API."""
+    return JsonResponse({
+        "status": "ok",
+        "service": "InnovationAI Labs API",
+    })
+
+
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/users/', include('users.urls')),
-    path('api/courses/', include('courses.urls')),
-    path('api/enrollments/', include('enrollments.urls')),
-    path('api/leads/', include('leads.urls')),
-    path('api/payments/', include('payments.urls')),
-    path('api/cv/', include('cvbuilder.urls')),
-    path('api/practice/', include('practice.urls')),
-    
+    path("", health_check, name="health-check"),
+    path("admin/", admin.site.urls),
+    path("api/users/", include("users.urls")),
+    path("api/courses/", include("courses.urls")),
+    path("api/enrollments/", include("enrollments.urls")),
+    path("api/leads/", include("leads.urls")),
+    path("api/payments/", include("payments.urls")),
+    path("api/cv/", include("cvbuilder.urls")),
+    path("api/practice/", include("practice.urls")),
 ]
 
 
