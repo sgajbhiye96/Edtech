@@ -178,6 +178,7 @@ class AdminPaymentListView(APIView):
         payments = Payment.objects.select_related("user", "batch").all().values(
             "order_id",
             "batch_id",
+            "course_id",
             "amount",
             "status",
             "created_at",
@@ -187,6 +188,34 @@ class AdminPaymentListView(APIView):
             "user__email",
         )
         return Response(list(payments))
+
+
+
+class AdminVerifyUPIPaymentView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        if not request.user.is_staff:
+            return Response({"error": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            payment = Payment.objects.select_related("batch", "user").get(pk=pk)
+        except Payment.DoesNotExist:
+            return Response({"error": "Payment not found."}, status=status.HTTP_404_NOT_FOUND)
+        if payment.provider != "UPI_QR" or payment.batch_id is None:
+            return Response({"error": "Only batch UPI QR payments can be verified here."}, status=400)
+        if payment.status == "SUCCESS":
+            return Response({"status": "SUCCESS", "order_id": payment.order_id})
+        if payment.status != "PENDING":
+            return Response({"error": "Only pending UPI payments can be approved."}, status=409)
+        payment.status = "SUCCESS"
+        payment.save(update_fields=["status", "updated_at"])
+        try:
+            activate_enrollment(payment)
+        except ValueError as exc:
+            payment.status = "PENDING"
+            payment.save(update_fields=["status", "updated_at"])
+            return Response({"error": str(exc)}, status=409)
+        return Response({"status": "SUCCESS", "order_id": payment.order_id, "batch_id": payment.batch_id})
 
 
 class CreateOrderView(APIView):
