@@ -18,19 +18,28 @@ export default function SyllabusModal({ course, onClose }) {
     setLoading(true);
     setError("");
     try {
-      await API.post("/leads/", form);
-      if (course.syllabus) {
-        const link = document.createElement("a");
-        link.href = course.syllabus;
-        link.target = "_blank";
-        link.download = `${course.title}-syllabus.pdf`;
-        link.click();
-      } else {
-        alert("Syllabus not available yet!");
+      // Lead capture should never block the syllabus download.
+      try {
+        await API.post("/leads/", form);
+      } catch (leadError) {
+        console.error("Lead capture failed:", leadError?.response?.data || leadError);
       }
+
+      if (!course.syllabus) {
+        alert("Syllabus not available yet!");
+        return;
+      }
+
+      // Use the exact Cloudinary delivery URL returned by the API.
+      // Do not inject fl_attachment into raw-file URLs because some Cloudinary
+      // raw deliveries reject that transformation with ERR_INVALID_RESPONSE.
+      const syllabusUrl = String(course.syllabus);
+      window.open(syllabusUrl, "_blank", "noopener,noreferrer");
+
       onClose();
     } catch (err) {
-      setError("Something went wrong. Please try again.");
+      console.error("Syllabus download failed:", err);
+      setError("Unable to download the syllabus. Please try again.");
     } finally {
       setLoading(false);
     }
