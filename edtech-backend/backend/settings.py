@@ -15,9 +15,22 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 # ─── Security ─────────────────────────────────────────────
 # SECRET_KEY = os.environ.get("SECRET_KEY")
 DEBUG = os.environ.get("DEBUG", "False") == "True"
-ALLOWED_HOSTS = os.environ.get(
-   "ALLOWED_HOSTS", "localhost,127.0.0.1"
-).split(",")
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.environ.get(
+        "ALLOWED_HOSTS", "localhost,127.0.0.1"
+    ).split(",")
+    if host.strip()
+]
+# Always allow the production app/site hostnames, even if the environment
+# variable ALLOWED_HOSTS is configured with only a partial list.
+for _host in (
+    "innovationailabs-edtech-x5sb8.ondigitalocean.app",
+    "innovationailabs.in",
+    "www.innovationailabs.in",
+):
+    if _host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(_host)
 
 # ─── Razorpay ───────────────────────────────────────────
 RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "")
@@ -102,7 +115,7 @@ AUTH_USER_MODEL = 'users.User'
 AUTH_PASSWORD_VALIDATORS = [
    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-   {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+   {'NAME': 'django.contrib.auth.password_validation.CommonPasswordPasswordValidator'},
    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
