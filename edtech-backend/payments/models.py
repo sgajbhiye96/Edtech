@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.db import models
 
+from courses.models import Batch
+
 
 class Payment(models.Model):
     STATUS_CHOICES = [
@@ -14,22 +16,34 @@ class Payment(models.Model):
         ("UPI_QR", "UPI QR"),
     ]
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="payments")
-    # Retained for backward compatibility with existing course-based payments.
-    course_id = models.IntegerField()
-    # Nullable so existing payments remain valid and batch payments can coexist.
-    batch = models.ForeignKey(
-        "courses.Batch", null=True, blank=True, on_delete=models.PROTECT,
+    PROVIDER_CHOICES = [
+        ("RAZORPAY", "Razorpay"),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
         related_name="payments",
     )
-    provider = models.CharField(max_length=20, choices=PROVIDER_CHOICES, default="RAZORPAY")
+    batch = models.ForeignKey(
+        Batch,
+        on_delete=models.PROTECT,
+        related_name="payments",
+    )
+    provider = models.CharField(
+        max_length=20,
+        choices=PROVIDER_CHOICES,
+        default="RAZORPAY",
+    )
     order_id = models.CharField(max_length=100, unique=True)
-    # Retained for compatibility with existing records and integrations.
-    cf_order_id = models.CharField(max_length=100, blank=True)
     payment_id = models.CharField(max_length=100, blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     currency = models.CharField(max_length=10, default="INR")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="PENDING")
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="PENDING",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

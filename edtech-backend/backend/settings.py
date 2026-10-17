@@ -32,11 +32,10 @@ for _host in (
     if _host not in ALLOWED_HOSTS:
         ALLOWED_HOSTS.append(_host)
 
-# ─── Razorpay ───────────────────────────────────────────
-RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "")
-RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET", "")
-RAZORPAY_WEBHOOK_SECRET = os.environ.get("RAZORPAY_WEBHOOK_SECRET", "")
-GENAI_AGENTIC_PRICE = os.environ.get("GENAI_AGENTIC_PRICE", "4999.00")
+# Cashfree credentials (load from environment)
+CASHFREE_APP_ID    = os.environ.get("CASHFREE_APP_ID", "")
+CASHFREE_SECRET_KEY = os.environ.get("CASHFREE_SECRET_KEY", "")
+CASHFREE_ENV       = os.environ.get("CASHFREE_ENV", "sandbox")  # sandbox | production
 
 # ─── Applications ─────────────────────────────────────────
 INSTALLED_APPS = [
@@ -96,7 +95,7 @@ TEMPLATES = [
    },
 ]
 
-# ─── Database ─────────────────────────────────────────────
+# ─── Database ───────────────────────────────────────────
 DATABASES = {
    "default": {
        "ENGINE": "django.db.backends.mysql",
@@ -112,7 +111,7 @@ DATABASES = {
    }
 }
 
-# ─── Auth ─────────────────────────────────────────────────
+# ─── Auth ───────────────────────────────────────────
 AUTH_USER_MODEL = 'users.User'
 AUTH_PASSWORD_VALIDATORS = [
    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -121,7 +120,7 @@ AUTH_PASSWORD_VALIDATORS = [
    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# ─── DRF & JWT ────────────────────────────────────────────
+# ─── DRF & JWT ─────────────────────────────────────────
 REST_FRAMEWORK = {
    'DEFAULT_AUTHENTICATION_CLASSES': (
        'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -135,26 +134,42 @@ SIMPLE_JWT = {
    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
 }
 
-# ─── CORS / CSRF ──────────────────────────────────────────
+# ─── CORS / CSRF ───────────────────────────────────────
+# Keep the production frontend origins enabled even when DigitalOcean
+# provides an environment variable with a custom/partial CORS list.
 def _csv_env(name):
-    return [value.strip() for value in os.environ.get(name, "").split(",") if value.strip()]
+   return [
+       value.strip()
+       for value in os.environ.get(name, "").split(",")
+       if value.strip()
+   ]
+
 
 CORS_ALLOWED_ORIGINS = list(dict.fromkeys(
-    _csv_env("CORS_ALLOWED_ORIGINS")
-    + ["https://innovationailabs.in", "https://www.innovationailabs.in", "http://localhost:3000"]
+   _csv_env("CORS_ALLOWED_ORIGINS")
+   + [
+       "https://innovationailabs.in",
+       "https://www.innovationailabs.in",
+       "http://localhost:3000",
+   ]
 ))
 CORS_ALLOW_CREDENTIALS = True
+
 CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(
-    _csv_env("CSRF_TRUSTED_ORIGINS")
-    + ["https://innovationailabs.in", "https://www.innovationailabs.in", "http://localhost:3000"]
+   _csv_env("CSRF_TRUSTED_ORIGINS")
+   + [
+       "https://innovationailabs.in",
+       "https://www.innovationailabs.in",
+       "http://localhost:3000",
+   ]
 ))
 
-# ─── Static Files ─────────────────────────────────────────
+# ─── Static Files ───────────────────────────────────────
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
-# ─── Cloudinary (MEDIA STORAGE) ───────────────────────────
+# ─── Cloudinary (MEDIA STORAGE) ─────────────────────────
 # Force PDF/files to upload as raw, not image
 CLOUDINARY_STORAGE = {
    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
@@ -164,16 +179,23 @@ CLOUDINARY_STORAGE = {
 }
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
-# ─── Internationalisation ─────────────────────────────────
+# ─── Internationalisation ─────────────────────────────
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Asia/Kolkata'
 USE_I18N = True
 USE_TZ = True
 
-# ─── Default PK ──────────────────────────────────────────
+# ─── Default PK ───────────────────────────────────────
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# ─── Email ────────────────────────────────────────────────
+# ─── Razorpay ───────────────────────────────────────────
+RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "")
+RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET", "")
+RAZORPAY_WEBHOOK_SECRET = os.environ.get("RAZORPAY_WEBHOOK_SECRET", "")
+RAZORPAY_CV_PLAN_ID = os.environ.get("RAZORPAY_CV_PLAN_ID", "")
+GENAI_AGENTIC_PRICE = os.environ.get("GENAI_AGENTIC_PRICE", "4999.00")
+
+# ─── Email ─────────────────────────────────────────────
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587

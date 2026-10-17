@@ -3,11 +3,10 @@ name: Frontend build
 on:
   push:
     branches:
-      - main
-      - integration/all-features-safe-payments
+      - feature/live-cohort-phase1
   pull_request:
     branches:
-      - main
+      - feature/live-cohort-phase1
 
 jobs:
   build:
