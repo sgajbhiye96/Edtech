@@ -40,7 +40,6 @@ export default function GenAIAgenticLanding() {
   const [searchParams] = useSearchParams();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [showPayment, setShowPayment] = useState(false);
 
   useEffect(() => {
@@ -75,9 +74,7 @@ export default function GenAIAgenticLanding() {
 
         if (mounted) setCourse(target);
       } catch (err) {
-        if (mounted) {
-          setError(err?.message || "Unable to load the course.");
-        }
+        console.error("Unable to load GenAI course data:", err);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -98,7 +95,10 @@ export default function GenAIAgenticLanding() {
       navigate("/login");
       return;
     }
-    if (!selectedBatch) return;
+    if (!selectedBatch) {
+      window.alert("Enrollment is temporarily unavailable because no batch is open. Please contact InnovationAI Labs for the next batch.");
+      return;
+    }
     setShowPayment(true);
   };
 
@@ -111,20 +111,6 @@ export default function GenAIAgenticLanding() {
     return (
       <div className="min-h-screen bg-[#F6F4ED] flex items-center justify-center text-[#2B3252]">
         Loading course...
-      </div>
-    );
-  }
-
-  if (error || !course || !selectedBatch) {
-    return (
-      <div className="min-h-screen bg-[#F6F4ED] flex items-center justify-center px-6">
-        <div className="max-w-lg text-center bg-white border border-[#E4E0D2] rounded-xl p-8">
-          <h1 className="text-2xl font-bold text-[#12172B] mb-3">Course unavailable</h1>
-          <p className="text-[#2B3252] mb-6">{error || "No active batch is currently available for enrollment."}</p>
-          <button onClick={() => navigate("/courses")} className="bg-[#12172B] text-white px-6 py-3 rounded-lg font-bold">
-            Browse courses
-          </button>
-        </div>
       </div>
     );
   }
