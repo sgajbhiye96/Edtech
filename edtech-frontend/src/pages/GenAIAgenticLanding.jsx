@@ -40,7 +40,6 @@ export default function GenAIAgenticLanding() {
   const [searchParams] = useSearchParams();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [showPayment, setShowPayment] = useState(false);
 
   useEffect(() => {
@@ -75,9 +74,7 @@ export default function GenAIAgenticLanding() {
 
         if (mounted) setCourse(target);
       } catch (err) {
-        if (mounted) {
-          setError(err?.message || "Unable to load the course.");
-        }
+        console.error("Unable to load GenAI course data:", err);
       } finally {
         if (mounted) setLoading(false);
       }
