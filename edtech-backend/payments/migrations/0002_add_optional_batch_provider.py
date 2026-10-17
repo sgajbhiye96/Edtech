@@ -2,6 +2,33 @@ from django.db import migrations, models
 import django.db.models.deletion
 
 
+class AddFieldIfColumnMissing(migrations.AddField):
+    """Avoid MySQL error 1060 if a prior attempt already created a column.
+
+    MySQL DDL may persist even when Django does not record the migration as
+    applied. This lets a retry continue when the requested column is present.
+    """
+
+    def database_forwards(self, app_label, schema_editor, from_state, to_state):
+        model = to_state.apps.get_model(app_label, self.model_name)
+        table_name = model._meta.db_table
+
+        with schema_editor.connection.cursor() as cursor:
+            tables = schema_editor.connection.introspection.table_names(cursor)
+            if table_name in tables:
+                columns = {
+                    column.name
+                    for column in schema_editor.connection.introspection.get_table_description(
+                        cursor, table_name
+                    )
+                }
+                field = model._meta.get_field(self.name)
+                if field.column in columns:
+                    return
+
+        super().database_forwards(app_label, schema_editor, from_state, to_state)
+
+
 class Migration(migrations.Migration):
     dependencies = [
         ("courses", "0004_batch_liveclass_course_fields"),
@@ -9,7 +36,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
+        AddFieldIfColumnMissing(
             model_name="payment",
             name="batch",
             field=models.ForeignKey(
@@ -20,7 +47,7 @@ class Migration(migrations.Migration):
                 to="courses.batch",
             ),
         ),
-        migrations.AddField(
+        AddFieldIfColumnMissing(
             model_name="payment",
             name="provider",
             field=models.CharField(
