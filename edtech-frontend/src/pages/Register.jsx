@@ -2,6 +2,35 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import API from "../services/api";
 
+function readableApiError(err) {
+  const status = err?.response?.status;
+  const data = err?.response?.data;
+
+  if (!status) {
+    return "Cannot connect to the server. Please check the API URL and backend deployment.";
+  }
+
+  if (status === 400 && data && typeof data === "object") {
+    const messages = Object.entries(data)
+      .map(([field, value]) => {
+        const detail = Array.isArray(value) ? value.join(" ") : String(value);
+        return field === "non_field_errors" ? detail : `${field}: ${detail}`;
+      })
+      .filter(Boolean);
+    return messages.join(" ") || "Please check your registration details.";
+  }
+
+  if (status === 409) {
+    return "That username or email may already be registered. Try another one.";
+  }
+
+  if (status >= 500) {
+    return `The server encountered an error (HTTP ${status}). Please try again later.`;
+  }
+
+  return `Registration request failed (HTTP ${status}). Please contact support if this continues.`;
+}
+
 export default function Register() {
   const [form, setForm] = useState({ username: "", email: "", password: "" });
   const [error, setError] = useState("");
@@ -11,7 +40,8 @@ export default function Register() {
   const submit = async (e) => {
     e.preventDefault();
     setError("");
-    if (!form.username || !form.email || !form.password) {
+
+    if (!form.username.trim() || !form.email.trim() || !form.password) {
       setError("All fields are required.");
       return;
     }
@@ -19,23 +49,24 @@ export default function Register() {
       setError("Password must be at least 6 characters.");
       return;
     }
+
     setLoading(true);
     try {
-      await API.post("/users/register/", form);
+      await API.post("/users/register/", {
+        username: form.username.trim(),
+        email: form.email.trim(),
+        password: form.password,
+      });
       navigate("/login", { state: { registered: true } });
     } catch (err) {
-      const data = err?.response?.data;
-      const status = err?.response?.status;
-      if (data && typeof data === "object") {
-        const firstError = Object.values(data).flat()[0];
-        setError(`${firstError}`);
-      } else if (status === 400) {
-        setError("Registration failed. Please check your details.");
-      } else if (!status) {
-        setError("Cannot reach server. Check your internet connection.");
-      } else {
-        setError("Registration failed. Please try again.");
-      }
+      console.error("Registration API request failed", {
+        url: err?.config?.url,
+        baseURL: err?.config?.baseURL,
+        status: err?.response?.status,
+        response: err?.response?.data,
+        message: err?.message,
+      });
+      setError(readableApiError(err));
     } finally {
       setLoading(false);
     }
@@ -52,16 +83,18 @@ export default function Register() {
         </p>
 
         {error && (
-          <div className="mb-5 bg-[#F3D8D5] border border-[#E3A9A3] text-[#B14A42] text-sm rounded-[3px] px-4 py-3 text-center">
+          <div role="alert" className="mb-5 bg-[#F3D8D5] border border-[#E3A9A3] text-[#B14A42] text-sm rounded-[3px] px-4 py-3 text-center">
             {error}
           </div>
         )}
 
         <form onSubmit={submit}>
-          <label className="block text-sm font-medium text-[#2B3252] mb-1.5">
+          <label htmlFor="register-username" className="block text-sm font-medium text-[#2B3252] mb-1.5">
             Username
           </label>
           <input
+            id="register-username"
+            required
             className="w-full mb-4 px-3.5 py-2.5 border border-[#E4E0D2] rounded-[3px] focus:outline-none focus:ring-2 focus:ring-[#F2A93B] text-sm text-[#12172B]"
             placeholder="Choose a username"
             autoComplete="username"
@@ -69,11 +102,13 @@ export default function Register() {
             onChange={(e) => setForm({ ...form, username: e.target.value })}
           />
 
-          <label className="block text-sm font-medium text-[#2B3252] mb-1.5">
+          <label htmlFor="register-email" className="block text-sm font-medium text-[#2B3252] mb-1.5">
             Email
           </label>
           <input
+            id="register-email"
             type="email"
+            required
             className="w-full mb-4 px-3.5 py-2.5 border border-[#E4E0D2] rounded-[3px] focus:outline-none focus:ring-2 focus:ring-[#F2A93B] text-sm text-[#12172B]"
             placeholder="your@email.com"
             autoComplete="email"
@@ -81,11 +116,14 @@ export default function Register() {
             onChange={(e) => setForm({ ...form, email: e.target.value })}
           />
 
-          <label className="block text-sm font-medium text-[#2B3252] mb-1.5">
+          <label htmlFor="register-password" className="block text-sm font-medium text-[#2B3252] mb-1.5">
             Password
           </label>
           <input
+            id="register-password"
             type="password"
+            required
+            minLength={6}
             className="w-full mb-6 px-3.5 py-2.5 border border-[#E4E0D2] rounded-[3px] focus:outline-none focus:ring-2 focus:ring-[#F2A93B] text-sm text-[#12172B]"
             placeholder="Min. 6 characters"
             autoComplete="new-password"
