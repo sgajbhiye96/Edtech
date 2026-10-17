@@ -36,6 +36,20 @@ def calculate_batch_amount(batch):
         return Decimal(settings.GENAI_AGENTIC_PRICE)
     return Decimal(batch.price)
 
+def generate_order_id(prefix="ORD"):
+    return f"{prefix}-{uuid.uuid4().hex[:16].upper()}"
+def get_open_batch(batch_id):
+    try:
+        batch = Batch.objects.select_related("course").get(
+            pk=batch_id,
+            registration_open=True,
+            course__is_active=True,
+        )
+    except Batch.DoesNotExist:
+        return None, Response(
+            {"error": "Batch not found or registration is closed."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
 
 def generate_order_id():
     return f"ORD-{uuid.uuid4().hex[:16].upper()}"
@@ -128,7 +142,9 @@ class AdminPaymentListView(APIView):
         return Response(list(payments))
 
 
-class CreateOrderView(APIView):
+
+
+class AdminVerifyUPIPaymentView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):

@@ -11,6 +11,10 @@ class Payment(models.Model):
         ("FAILED", "Failed"),
         ("CANCELLED", "Cancelled"),
     ]
+    PROVIDER_CHOICES = [
+        ("RAZORPAY", "Razorpay"),
+        ("UPI_QR", "UPI QR"),
+    ]
 
     PROVIDER_CHOICES = [
         ("RAZORPAY", "Razorpay"),
