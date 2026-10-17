@@ -5,12 +5,12 @@ from enrollments.models import Enrollment
 from rest_framework.response import Response
 
 from .models import Course, Batch, LiveClass, LearningResource, Assignment, Project
-from .serializers import CourseSerializer, BatchSerializer, LiveClassSerializer, LearningResourceSerializer, AssignmentSerializer, ProjectSerializer
+from .serializers import CourseCatalogSerializer, CourseSerializer, BatchSerializer, LiveClassSerializer, LearningResourceSerializer, AssignmentSerializer, ProjectSerializer
 
 
 class CourseListView(generics.ListAPIView):
     queryset = Course.objects.filter(is_active=True)
-    serializer_class = CourseSerializer
+    serializer_class = CourseCatalogSerializer
     permission_classes = [permissions.AllowAny]
 
 
@@ -116,6 +116,7 @@ class ProjectCreateView(generics.CreateAPIView):
     serializer_class = ProjectSerializer
     permission_classes = [permissions.IsAdminUser]
 
+
 class AdminBatchListView(generics.ListAPIView):
     queryset = Batch.objects.select_related("course").all()
     serializer_class = BatchSerializer
@@ -155,9 +156,8 @@ class AdminLiveClassListView(generics.ListAPIView):
 
 
 class AdminLiveClassDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = LiveClass.objects.all()
-    serializer_class = LiveClassSerializer
     permission_classes = [permissions.IsAdminUser]
+    serializer_class = LiveClassSerializer
 
 
 class AdminLearningResourceListView(generics.ListAPIView):
@@ -169,9 +169,8 @@ class AdminLearningResourceListView(generics.ListAPIView):
 
 
 class AdminLearningResourceDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = LearningResource.objects.all()
-    serializer_class = LearningResourceSerializer
     permission_classes = [permissions.IsAdminUser]
+    serializer_class = LearningResourceSerializer
 
 
 class AdminAssignmentListView(generics.ListAPIView):
@@ -183,9 +182,8 @@ class AdminAssignmentListView(generics.ListAPIView):
 
 
 class AdminAssignmentDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Assignment.objects.all()
-    serializer_class = AssignmentSerializer
     permission_classes = [permissions.IsAdminUser]
+    serializer_class = AssignmentSerializer
 
 
 class AdminProjectListView(generics.ListAPIView):
@@ -197,6 +195,5 @@ class AdminProjectListView(generics.ListAPIView):
 
 
 class AdminProjectDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Project.objects.all()
-    serializer_class = ProjectSerializer
     permission_classes = [permissions.IsAdminUser]
+    serializer_class = ProjectSerializer
