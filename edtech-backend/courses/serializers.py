@@ -43,6 +43,22 @@ class BatchSerializer(serializers.ModelSerializer):
         return obj.enrollments.filter(status="ACTIVE").count()
 
 
+class CourseCatalogSerializer(serializers.ModelSerializer):
+    """Keep the public catalog response independent of nested lesson/batch data."""
+    thumbnail = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Course
+        fields = ("id", "title", "description", "price", "thumbnail", "is_active", "created_at", "updated_at")
+
+    def get_thumbnail(self, obj):
+        try:
+            return obj.thumbnail.url if obj.thumbnail else None
+        except (ValueError, OSError):
+            # A missing/unavailable optional thumbnail must not break the catalog.
+            return None
+
+
 class CourseSerializer(serializers.ModelSerializer):
     thumbnail = serializers.ImageField(required=False)
     lessons = LessonSerializer(many=True, read_only=True)
